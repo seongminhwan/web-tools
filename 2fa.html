@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2FA 验证器</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --accent-color: #f72585;
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --card-gradient: linear-gradient(135deg, #ffffff, #f8f9fa);
+      --code-color: #4361ee;
+      --code-shadow: 0 2px 10px rgba(67, 97, 238, 0.15);
+      --text-color: #333333;
+      --text-light: #666666;
+      --success-color: #4caf50;
+      --danger-color: #f44336;
+      --border-radius: 12px;
+      --shadow: 0 10px 20px rgba(0,0,0,0.05);
+      --card-shadow: 0 15px 25px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      width: 100%;
+      transition: var(--transition);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--accent-color);
+      border-radius: 2px;
+    }
+
+    .input-container {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+      transition: var(--transition);
+    }
+
+    .input-container:hover {
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .input-group {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: center;
+    }
+
+    input {
+      flex: 1;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: var(--border-radius);
+      margin-right: 15px;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      outline: none;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box::before {
+      content: '🔍';
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #999;
+    }
+
+    .search-box input {
+      padding-left: 45px;
+    }
+
+    button {
+      padding: 15px 25px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: var(--card-gradient);
+      border-radius: var(--border-radius);
+      padding: 16px 20px 16px 16px;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+      /* 替换顶部条为左侧彩色边框 */
+      border-left: 4px solid var(--primary-color);
+    }
+    
+    /* 账户图标样式 */
+    .account-icon {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      background: var(--primary-color);
+      font-size: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    
+    .account-icon img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+    
+    .account-icon i {
+      font-size: 16px;
+    }
+
+    .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 30px rgba(0,0,0,0.12);
+    }
+    
+    /* 为不同的卡片添加不同的边框色彩 */
+    .card:nth-child(3n) {
+      border-left-color: var(--accent-color);
+    }
+    
+    .card:nth-child(3n+1) {
+      border-left-color: var(--secondary-color);
+    }
+
+    .card .label {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-color);
+      word-break: break-word;
+      padding-right: 30px; /* Space for delete button */
+      padding-left: 42px; /* Space for icon */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card .code {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 12px 0;
+      color: var(--code-color);
+      letter-spacing: 1px;
+      word-break: break-word;
+      text-align: center;
+      text-shadow: var(--code-shadow);
+      font-family: 'Courier New', monospace;
+      min-width: 240px; /* 确保验证码区域有足够宽度 */
+    }
+
+    .card .remaining {
+      font-size: 12px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding: 2px 0;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      transition: width 1s linear;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(67, 97, 238, 0.3);
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      color: var(--text-light);
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.4;
+      transition: var(--transition);
+      z-index: 2;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+      color: var(--danger-color);
+      transform: rotate(90deg);
+      background: rgba(244, 67, 54, 0.1);
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 300px;
+      background: var(--primary-color);
+      color: white;
+      padding: 30px 20px;
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar p {
+      margin-bottom: 15px;
+      line-height: 1.8;
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 22px;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .sidebar-toggle:hover {
+      background: var(--secondary-color);
+      transform: rotate(90deg);
+    }
+
+    .sidebar-content {
+      padding: 15px 0;
+    }
+    
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+
+    .sidebar-section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 拖放区域样式 */
+    .dropzone-container {
+      margin-top: 10px;
+      overflow: hidden;
+      transition: var(--transition);
+      max-height: 0; /* 默认折叠 */
+    }
+    
+    .dropzone-container.expanded {
+      max-height: 150px; /* 展开时的高度 */
+    }
+    
+    .dropzone-toggle {
+      cursor: pointer;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    .dropzone {
+      border: 2px dashed #ccc;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .dropzone.highlight {
+      border-color: var(--primary-color);
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .dropzone i {
+      font-size: 48px;
+      color: #ccc;
+      margin-bottom: 15px;
+    }
+    
+    .dropzone p {
+      color: var(--text-light);
+    }
+
+    /* 一些动画效果 */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+    
+    /* 复制成功提示 */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--primary-color);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+        margin: 20px auto;
+      }
+      
+      .card-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .input-group {
+        flex-direction: column;
+      }
+      
+      input {
+        margin-right: 0;
+        margin-bottom: 10px;
+        width: 100%;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .sidebar {
+        width: 85%;
+      }
+    }
+    
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-light: #a0a0a0;
+        --shadow: 0 10px 20px rgba(0,0,0,0.2);
+      }
+      
+      input {
+        background: #2a2a2a;
+        border-color: #333;
+        color: var(--text-color);
+      }
+    }
+    
+    /* 动画类 */
+    .fade-in {
+      animation: fadeIn 0.5s forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fas fa-book"></i>
+  </button>
+  
+  <div class="sidebar" id="sidebar">
+    <h3>使用说明</h3>
+    
+    <div class="sidebar-content">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <i class="fas fa-plus-circle"></i> 添加账户
+        </div>
+        <p>• 输入 TOTP URI 或 Secret 后点击添加</p>
+        <p>• 粘贴二维码图片或拖入图片自动解析</p>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <i class="fas fa-copy"></i> 使用验证码
+        </div>
+        <p>• 点击卡片可快速复制验证码</p>
+        <p>• 搜索框可快速查找账户</p>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <i class="fas fa-shield-alt"></i> 隐私说明
+        </div>
+        <p>• 所有数据仅存储在本地浏览器中</p>
+        <p>• 不上传、不收集任何数据</p>
+        <p>• 没有网络请求，保障您的隐私安全</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>2FA 验证器</h1>
+    </header>
+    
+    <div class="input-container">
+      <div class="input-group">
+        <input type="text" id="input" placeholder="输入 TOTP URI 或 Secret">
+        <button onclick="addAccount()">
+          <i class="fas fa-plus"></i> 添加账户
+        </button>
+      </div>
+      
+      <div class="input-group search-box">
+        <input type="text" id="search" placeholder="搜索账户..." oninput="renderAccounts()">
+      </div>
+      
+      <div class="dropzone-toggle" id="dropzoneToggle">
+        <i class="fas fa-plus-circle"></i> 显示二维码上传区域
+      </div>
+      <div class="dropzone-container" id="dropzoneContainer">
+        <div class="dropzone" id="dropzone">
+          <i class="fas fa-qrcode"></i>
+          <p>拖放二维码图片至此处，或点击粘贴二维码图片</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-container" id="accounts"></div>
+  </div>
+  
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i> <span id="toastMessage">验证码已复制到剪贴板</span>
+  </div>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    // 初始化数据
+    let accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+    
+    // 如果没有账户，添加一些测试账户（仅用于展示UI效果）
+    if (accounts.length === 0) {
+      accounts = [
+        { label: 'Google账户', secret: 'JBSWY3DPEHPK3PXP', issuedTime: Date.now() },
+        { label: 'GitHub', secret: 'NBSWY3DPFXPK3PQR', issuedTime: Date.now() },
+        { label: '非常长的账户名称会被截断显示测试', secret: 'HBSWY3DPEEPK3PXP', issuedTime: Date.now() },
+        { label: 'Microsoft', secret: 'KBSXY3DPEHPK3PXO', issuedTime: Date.now() }
+      ];
+      // 不自动保存到localStorage，这样刷新页面后会恢复空状态
+    }
+    const input = document.getElementById('input');
+    const search = document.getElementById('search');
+    const accountsDiv = document.getElementById('accounts');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const toast = document.getElementById('toast');
+    const dropzone = document.getElementById('dropzone');
+    
+    // 侧边栏切换
+    sidebarToggle.onclick = () => {
+      sidebar.classList.toggle('open');
+      sidebarToggle.classList.toggle('active');
+    };
+    
+    // 解析 TOTP Secret
+    function parseSecret(str) {
+      try {
+        str = str.trim();
+        if (str.toLowerCase().startsWith('otpauth://')) {
+          const url = new URL(str);
+          const secret = url.searchParams.get('secret');
+          const label = decodeURIComponent(url.pathname.split('/').pop() || '');
+          return { secret, label };
+        }
+      } catch (e) {
+        console.error('解析 URI 失败:', e);
+      }
+      return { secret: str.replace(/\s+/g, ''), label: '' };
+    }
+    
+    // 添加账户
+    function addAccount() {
+      const inputValue = input.value.trim();
+      if (!inputValue) {
+        showToast('请输入有效的 TOTP URI 或 Secret', 'error');
+        return;
+      }
+      
+      const { secret, label: parsedLabel } = parseSecret(inputValue);
+      
+      if (!secret) {
+        showToast('无效的 Secret', 'error');
+        return;
+      }
+      
+      // 如果从 URI 解析出标签，直接使用；否则提示用户输入
+      const label = parsedLabel || prompt('输入账户标签', '未命名账户') || '未命名账户';
+      
+      // 检查是否已存在相同的账户
+      const exists = accounts.some(acc => acc.secret === secret);
+      if (exists) {
+        showToast('此账户已存在', 'error');
+        return;
+      }
+      
+      // 添加动画效果
+      const newAccount = { label, secret, isNew: true };
+      accounts.push(newAccount);
+      saveAndRender();
+      input.value = '';
+      
+      // 提示添加成功
+      showToast(`账户 "${label}" 添加成功`);
+      
+      // 一段时间后移除新增标记
+      setTimeout(() => {
+        newAccount.isNew = false;
+        saveAndRender();
+      }, 3000);
+    }
+    
+    // 删除账户
+    function deleteAccount(i, event) {
+      event.stopPropagation();
+      if (confirm(`确定要删除账户 "${accounts[i].label}" 吗？`)) {
+        accounts.splice(i, 1);
+        saveAndRender();
+        showToast('账户已删除');
+      }
+    }
+    
+    // 保存并渲染
+    function saveAndRender() {
+      localStorage.setItem('accounts', JSON.stringify(accounts));
+      renderAccounts();
+    }
+    
+    // 生成 TOTP 验证码
+    function generateTOTP(secret) {
+      try {
+        const key = base32tohex(secret);
+        const epoch = Math.round(new Date().getTime() / 1000.0);
+        const time = leftpad(dec2hex(Math.floor(epoch / 30)), 16, '0');
+        
+        // 使用 jsSHA 计算 HMAC
+        const hmacObj = new jsSHA('SHA-1', 'HEX');
+        hmacObj.setHMACKey(key, 'HEX');
+        hmacObj.update(time);
+        const hmac = hmacObj.getHMAC('HEX');
+        
+        const offset = hex2dec(hmac.substring(hmac.length - 1));
+        const truncatedHash = (hex2dec(hmac.substr(offset * 2, 8)) & hex2dec('7fffffff')) + '';
+        return truncatedHash.substr(truncatedHash.length - 6, 6);
+      } catch (e) {
+        console.error('生成 TOTP 失败:', e);
+        return '------';
+      }
+    }
+    
+    // 渲染账户列表（初始渲染）
+    function renderAccounts() {
+      accountsDiv.innerHTML = '';
+      const filter = search.value.toLowerCase();
+      
+      const filteredAccounts = accounts.filter(acc => {
+        // 防御性检查，确保属性存在
+        const labelMatch = acc.label && typeof acc.label === 'string' ? 
+          acc.label.toLowerCase().includes(filter) : false;
+        const secretMatch = acc.secret && typeof acc.secret === 'string' ? 
+          acc.secret.toLowerCase().includes(filter) : false;
+        return labelMatch || secretMatch;
+      });
+      
+      if (filteredAccounts.length === 0) {
+        accountsDiv.innerHTML = `
+          <div style="text-align: center; grid-column: 1/-1; padding: 30px; color: var(--text-light);">
+            ${filter ? '没有找到匹配的账户' : '还没有添加任何账户'}
+            <div style="margin-top: 15px; font-size: 32px;">
+              <i class="fas ${filter ? 'fa-search' : 'fa-qrcode'}"></i>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 创建所有卡片元素
+      filteredAccounts.forEach((acc, i) => {
+        const originalIndex = accounts.indexOf(acc);
+        const card = document.createElement('div');
+        card.className = `card ${acc.isNew ? 'pulse' : ''} fade-in`;
+        card.id = `card-${originalIndex}`;
+        
+        // 计算进度条宽度
+        const progressWidth = acc.remaining ? ((30 - acc.remaining) / 30) * 100 : 0;
+        
+        card.onclick = () => {
+          navigator.clipboard.writeText(acc.code || '------')
+            .then(() => showToast(`已复制 ${acc.label} 的验证码`))
+            .catch(() => showToast('复制失败，请手动复制', 'error'));
+        };
+        
+        // 获取账户图标
+        const iconHTML = getIconForAccount(acc.label, originalIndex % 3);
+        
+        card.innerHTML = `
+          <button class="delete-btn" title="删除此账户" onclick="deleteAccount(${originalIndex}, event)">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="account-icon" style="background: ${getIconColor(originalIndex % 3)}">
+            ${iconHTML}
+          </div>
+          <div class="label" title="${escapeHTML(acc.label)}">${escapeHTML(acc.label)}</div>
+          <div class="code" id="code-${originalIndex}">${formatCode(acc.code || '------')}</div>
+          <div class="remaining">
+            <span id="remain-time-${originalIndex}">剩余 ${acc.remaining || 30} 秒</span>
+            <span id="issued-time-${originalIndex}">${acc.issuedTime ? new Date(acc.issuedTime).toLocaleTimeString() : ''}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress" id="progress-${originalIndex}" style="width: ${progressWidth}%"></div>
+          </div>
+        `;
+        
+        accountsDiv.appendChild(card);
+      });
+    }
+    
+    // 更新验证码（只更新需要变化的部分）
+    function updateCodes() {
+      const epoch = Math.floor(Date.now() / 1000);
+      const remain = 30 - (epoch % 30);
+      
+      // 只有在剩余时间变化时才更新 UI
+      const needsUpdate = !accounts.length || accounts.some(acc => acc.remaining !== remain);
+      
+      if (needsUpdate) {
+        accounts.forEach((acc, index) => {
+          // 更新数据
+          acc.code = generateOtp(acc.secret);
+          acc.remaining = remain;
+          acc.issuedTime = Date.now();
+          
+          // 局部更新DOM，不重新渲染整个卡片
+          const codeElement = document.getElementById(`code-${index}`);
+          const remainTimeElement = document.getElementById(`remain-time-${index}`);
+          const progressElement = document.getElementById(`progress-${index}`);
+          const issuedTimeElement = document.getElementById(`issued-time-${index}`);
+          
+          if (codeElement) codeElement.innerHTML = formatCode(acc.code || '------');
+          if (remainTimeElement) remainTimeElement.textContent = `剩余 ${acc.remaining || 30} 秒`;
+          if (progressElement) progressElement.style.width = `${((30 - acc.remaining) / 30) * 100}%`;
+          if (issuedTimeElement && acc.issuedTime) {
+            issuedTimeElement.textContent = new Date(acc.issuedTime).toLocaleTimeString();
+          }
+        });
+        
+        // 如果没有找到元素(可能是搜索过滤导致)，重新渲染整个列表
+        if (accounts.length > 0 && !document.getElementById(`code-0`)) {
+          renderAccounts();
+        }
+      }
+    }
+    
+    // 定时更新验证码
+    setInterval(updateCodes, 1000);
+    updateCodes(); // 初始更新
+    
+    // 辅助函数 - 显示提示消息
+    function showToast(message, type = 'success') {
+      const toastElement = document.getElementById('toast');
+      const messageElement = document.getElementById('toastMessage');
+      
+      messageElement.textContent = message;
+      toastElement.className = `toast show ${type}`;
+      
+      if (type === 'error') {
+        toastElement.style.background = 'var(--danger-color)';
+      } else {
+        toastElement.style.background = 'var(--success-color)';
+      }
+      
+      setTimeout(() => {
+        toastElement.className = 'toast';
+      }, 3000);
+    }
+    
+    // 辅助函数 - HTML 转义
+    // 获取账户图标的函数（使用Font Awesome图标替代外部SVG）
+    function getIconForAccount(accountName, colorIndex) {
+      // 常见网站的Font Awesome图标映射
+      const knownSites = {
+        'github': '<i class="fab fa-github"></i>',
+        'google': '<i class="fab fa-google"></i>',
+        'outlook': '<i class="far fa-envelope"></i>',
+        'twitter': '<i class="fab fa-twitter"></i>',
+        'microsoft': '<i class="fab fa-microsoft"></i>',
+        'apple': '<i class="fab fa-apple"></i>',
+        'amazon': '<i class="fab fa-amazon"></i>',
+        'facebook': '<i class="fab fa-facebook"></i>',
+        'instagram': '<i class="fab fa-instagram"></i>',
+        'linkedin': '<i class="fab fa-linkedin"></i>',
+        'discord': '<i class="fab fa-discord"></i>',
+        'gitlab': '<i class="fab fa-gitlab"></i>',
+        'bitbucket': '<i class="fab fa-bitbucket"></i>',
+        'dropbox': '<i class="fab fa-dropbox"></i>',
+        'slack': '<i class="fab fa-slack"></i>',
+        'steam': '<i class="fab fa-steam"></i>',
+        'gmail': '<i class="far fa-envelope"></i>',
+        'yahoo': '<i class="fab fa-yahoo"></i>',
+        'twitch': '<i class="fab fa-twitch"></i>',
+        'reddit': '<i class="fab fa-reddit"></i>'
+      };
+      
+      if (!accountName) return '?';
+      
+      // 匹配逻辑优化：优先匹配完整单词
+      const lowerName = accountName.toLowerCase();
+      
+      // 1. 精确匹配 - 尝试查找完整单词匹配
+      for (const site in knownSites) {
+        // 检查是否为独立单词（前后是非字母数字字符或字符串边界）
+        const regex = new RegExp(`(^|[^a-z0-9])${site}([^a-z0-9]|$)`, 'i');
+        if (regex.test(lowerName)) {
+          return knownSites[site];
+        }
+      }
+      
+      // 2. 普通匹配 - 查找是否包含网站名
+      for (const site in knownSites) {
+        if (lowerName.includes(site)) {
+          return knownSites[site];
+        }
+      }
+      
+      // 否则返回首字母
+      const firstChar = accountName.trim()[0] || '?';
+      return firstChar.toUpperCase();
+    }
+    
+    // 获取图标背景色
+    function getIconColor(index) {
+      const colors = [
+        'var(--primary-color)',    // 蓝色
+        'var(--secondary-color)',  // 深蓝色
+        'var(--accent-color)'      // 粉色
+      ];
+      return colors[index % colors.length];
+    }
+
+    function escapeHTML(str) {
+      // 防御性检查，确保输入为字符串
+      if (str === undefined || str === null || typeof str !== 'string') {
+        return '';
+      }
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // 工具函数
+    function dec2hex(s) { return (s < 15.5 ? '0' : '') + Math.round(s).toString(16); }
+    function hex2dec(s) { return parseInt(s, 16); }
+    
+    function leftpad(s, l, p) { 
+      return s.length >= l ? s : Array(l - s.length + 1).join(p) + s; 
+    }
+    
+    // 验证码格式化函数 - 将6位数字分为2组，提高可读性
+    function formatCode(code) {
+      if (code === '------') return code;
+      
+      // 如果是6位数字，分组显示
+      if (/^\d{6}$/.test(code)) {
+        return `${code.substr(0, 3)}<span style="margin: 0 4px"></span>${code.substr(3, 3)}`;
+      }
+      
+      return code;
+    }
+    
+    function base32tohex(base32) {
+      const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      let bits = '';
+      let hex = '';
+      
+      base32 = base32.replace(/=+$/, '').toUpperCase();
+      
+      for (let i = 0; i < base32.length; i++) {
+        const val = base32chars.indexOf(base32.charAt(i));
+        if (val === -1) continue;
+        bits += leftpad(val.toString(2), 5, '0');
+      }
+      
+      for (let i = 0; i + 4 <= bits.length; i += 4) {
+        const chunk = bits.substr(i, 4);
+        hex += parseInt(chunk, 2).toString(16);
+      }
+      
+      return hex;
+    }
+    
+    function generateOtp(secret) {
+      if (!secret || typeof secret !== 'string') {
+        return '------';
+      }
+      
+      try {
+        const epoch = Math.round(new Date().getTime() / 1000.0);
+        const time = leftpad(dec2hex(Math.floor(epoch / 30)), 16, '0');
+        
+        // 确保 jsSHA 已定义
+        if (typeof jsSHA === 'undefined') {
+          console.error('jsSHA 库未加载');
+          return '------';
+        }
+        
+        const crypto = new jsSHA('SHA-1', 'HEX');
+        crypto.setHMACKey(base32tohex(secret), 'HEX');
+        crypto.update(time);
+        const hmac = crypto.getHMAC('HEX');
+        
+        const offset = hex2dec(hmac.substring(hmac.length - 1));
+        const truncatedHash = (hex2dec(hmac.substr(offset * 2, 8)) & hex2dec('7fffffff')) + '';
+        return truncatedHash.substr(truncatedHash.length - 6, 6);
+      } catch (e) {
+        console.error('生成 OTP 失败:', e, secret);
+        return '------';
+      }
+    }
+    
+    // 拖放功能
+    function setupDropzone() {
+      const dropzone = document.getElementById('dropzone');
+      
+      // 防止文件被浏览器处理而不是被拖放处理
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      // 拖拽状态高亮
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+          dropzone.classList.add('highlight');
+        }, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+          dropzone.classList.remove('highlight');
+        }, false);
+      });
+      
+      // 处理拖放的文件
+      dropzone.addEventListener('drop', event => {
+        const dt = event.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+          handleFiles(files);
+        }
+      }, false);
+      
+      // 也可以点击选择文件
+      dropzone.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = e => {
+          if (e.target.files.length) {
+            handleFiles(e.target.files);
+          }
+        };
+        fileInput.click();
+      });
+    }
+    
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    function handleFiles(files) {
+      if (files.length === 0) return;
+      
+      const file = files[0];
+      if (!file.type.match('image.*')) {
+        showToast('请选择图片文件', 'error');
+        return;
+      }
+      
+      processQrCode(file);
+    }
+    
+    function processQrCode(file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        const img = new Image();
+        
+        img.onload = function() {
+          const canvas = document.getElementById('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          try {
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+              const data = code.data;
+              input.value = data;
+              showToast('二维码解析成功，请点击添加账户');
+              
+              // 如果是 TOTP URI，自动添加
+              if (data.toLowerCase().startsWith('otpauth://')) {
+                const { secret, label } = parseSecret(data);
+                if (secret) {
+                  const exists = accounts.some(acc => acc.secret === secret);
+                  if (!exists) {
+                    accounts.push({ label: label || '扫描的账户', secret, isNew: true });
+                    saveAndRender();
+                    input.value = '';
+                    showToast(`账户 "${label || '扫描的账户'}" 已自动添加`);
+                    
+                    setTimeout(() => {
+                      const lastAccount = accounts[accounts.length - 1];
+                      if (lastAccount) {
+                        lastAccount.isNew = false;
+                        saveAndRender();
+                      }
+                    }, 3000);
+                  } else {
+                    showToast('此账户已存在', 'error');
+                  }
+                } else {
+                  showToast('无效的 TOTP URI', 'error');
+                }
+              }
+            } else {
+              showToast('未识别到二维码', 'error');
+            }
+          } catch (e) {
+            console.error('解析二维码失败:', e);
+            showToast('解析二维码失败', 'error');
+          }
+        };
+        
+        img.src = event.target.result;
+      };
+      
+      reader.readAsDataURL(file);
+    }
+    
+    // 粘贴图片功能
+    document.addEventListener('paste', e => {
+      const items = e.clipboardData.items;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          processQrCode(blob);
+          break;
+        }
+      }
+    });
+    
+    // 初始化
+    function init() {
+      setupDropzone();
+      setupDropzoneToggle();
+      renderAccounts();
+    }
+    
+    // 设置二维码区域的折叠/展开功能
+    function setupDropzoneToggle() {
+      const toggle = document.getElementById('dropzoneToggle');
+      const container = document.getElementById('dropzoneContainer');
+      
+      toggle.addEventListener('click', () => {
+        container.classList.toggle('expanded');
+        if (container.classList.contains('expanded')) {
+          toggle.innerHTML = '<i class="fas fa-minus-circle"></i> 隐藏二维码上传区域';
+        } else {
+          toggle.innerHTML = '<i class="fas fa-plus-circle"></i> 显示二维码上传区域';
+        }
+      });
+    }
+    
+    init();
+  </script>
+
+  <!-- 已在头部加载 jsSHA -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html>
