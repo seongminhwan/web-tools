@@ -134,17 +134,22 @@
             const secret = "rfenqpelfqc53esvvthmsnybahvil76t";
             const markdown = document.getElementById('testMarkdown').value;
             
+            // 创建完整的TOTP URI
+            const issuer = "Google";
+            const totpUri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+            
             // 加密数据
             const data = {
-                email: email,
-                password: password,
-                phone: "+86 138****1234",
+                googleAccount: email,
+                googlePassword: password,
+                recoveryPhone: "+86 138****1234",
                 recoveryEmail: "recovery@example.com",
-                secret: secret,
-                regDate: "2023-01-15",
-                regIp: "192.168.1.1",
+                totpSecret: secret,
+                totpUri: totpUri,  // 添加完整URI
+                registrationTime: "2023-01-15",
+                registrationIP: "192.168.1.1",
                 cookieInfo: "SID=value; HSID=value; SSID=value",
-                notes: markdown
+                accountNotes: markdown
             };
             
             // 加密逻辑
