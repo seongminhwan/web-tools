@@ -84,6 +84,15 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        // 页面加载完成自动执行测试
+        window.onload = function() {
+            // 自动执行URI解析测试
+            testUriParsing();
+            
+            // 自动执行Markdown预览测试
+            previewMarkdown();
+        };
+        
         function testUriParsing() {
             const uri = document.getElementById('testUri').value;
             try {
