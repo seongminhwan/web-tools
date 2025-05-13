@@ -808,6 +808,18 @@
       document.getElementById('cookieInfo').textContent = data.cookieInfo || '未提供';
       document.getElementById('totpSecret').textContent = data.totpSecret || '未提供';
       
+      // 如果数据中包含完整的TOTP URI，直接使用
+      if (data.totpUri) {
+        document.getElementById('totpUri').textContent = data.totpUri;
+      } else if (data.totpSecret && data.googleAccount) {
+        // 否则，从账号和密钥生成URI
+        const issuer = 'Email';
+        const otpauthURL = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(data.googleAccount)}?secret=${data.totpSecret}&issuer=${encodeURIComponent(issuer)}`;
+        document.getElementById('totpUri').textContent = otpauthURL;
+      } else {
+        document.getElementById('totpUri').textContent = '未提供';
+      }
+      
       // 处理Markdown备注
       const notesElement = document.getElementById('accountNotes');
       if (data.accountNotes) {
@@ -816,8 +828,21 @@
         notesElement.textContent = '未提供';
       }
       
-      // 生成TOTP二维码
-      generateQRCode(data.googleAccount, data.totpSecret);
+      // 生成TOTP二维码（使用已有的URI或生成新的）
+      if (data.totpUri) {
+        const qrcodeElement = document.getElementById('qrcode');
+        qrcodeElement.innerHTML = ''; // 清空容器
+        new QRCode(qrcodeElement, {
+          text: data.totpUri,
+          width: 200,
+          height: 200,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        generateQRCode(data.googleAccount, data.totpSecret);
+      }
       
       // 初始化TOTP验证码更新
       updateTOTP(data.totpSecret);
