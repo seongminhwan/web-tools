@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>邮箱账号信息查看</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha.js"></script>
+  <style>
+    :root {
+      --primary-color: #4285F4; /* Google蓝 */
+      --secondary-color: #34A853; /* Google绿 */
+      --accent-color: #EA4335; /* Google红 */
+      --warning-color: #FBBC05; /* Google黄 */
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --text-light: #666666;
+      --border-radius: 12px;
+      --shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--accent-color);
+      border-radius: 2px;
+    }
+
+    p.subtitle {
+      color: var(--text-light);
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+
+    .form-container {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+      outline: none;
+    }
+
+    .btn {
+      padding: 14px 25px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn:hover {
+      background: #3367d6;
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-warning {
+      background: var(--warning-color);
+    }
+
+    .btn-warning:hover {
+      background: #e0a800;
+    }
+
+    .btn-success {
+      background: var(--secondary-color);
+    }
+
+    .btn-success:hover {
+      background: #2e7d32;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+
+    .info-container {
+      display: none;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+    }
+
+    .info-section {
+      margin-bottom: 25px;
+    }
+
+    .info-group {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .info-label {
+      font-weight: 600;
+      min-width: 150px;
+      margin-right: 15px;
+    }
+
+    .info-value {
+      flex: 1;
+      padding: 10px 15px;
+      background: #f5f5f5;
+      border-radius: var(--border-radius);
+      position: relative;
+      word-break: break-all;
+    }
+
+    .info-value.secret {
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      padding: 3px 8px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: var(--transition);
+    }
+
+    .copy-btn:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+      color: white;
+      background: var(--accent-color);
+    }
+
+    .alert-warning {
+      background: var(--warning-color);
+      color: #333;
+    }
+
+    .totp-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: var(--border-radius);
+    }
+
+    .totp-code {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary-color);
+      font-family: monospace;
+      letter-spacing: 3px;
+      margin: 10px 0;
+      padding: 10px 20px;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .qrcode-container {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      border-radius: 3px;
+      transition: width 1s linear;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding: 20px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* 两栏布局样式 */
+    .two-column-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    
+    .left-column {
+      border-right: 1px solid #eee;
+      padding-right: 20px;
+    }
+    
+    .right-column {
+      padding-left: 10px;
+    }
+    
+    /* Cookie信息高度限制 */
+    .cookie-scroll {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    /* 2FA显示区域样式 */
+    .tfa-container {
+      margin-top: 30px;
+      padding: 20px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .tfa-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* TOTP计时器样式 */
+    .totp-timer {
+      margin: 10px 0;
+      font-size: 16px;
+      color: var(--text-color);
+      font-weight: 600;
+    }
+    
+    .totp-timer.expiring {
+      color: var(--accent-color);
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+        margin: 20px auto;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .btn-container {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .info-group {
+        flex-direction: column;
+      }
+
+      .info-label {
+        margin-bottom: 5px;
+        min-width: auto;
+      }
+    }
+
+    /* 暗色模式 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-light: #a0a0a0;
+      }
+
+      input {
+        background: #2a2a2a;
+        border-color: #333;
+        color: var(--text-color);
+      }
+
+      .info-value {
+        background: #2a2a2a;
+      }
+
+      .totp-section, .qrcode-container {
+        background: #2a2a2a;
+      }
+
+      .totp-code {
+        background: #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>邮箱账号信息查看</h1>
+      <p class="subtitle">安全地查看加密的账号信息</p>
+    </header>
+
+    <div class="alert alert-warning" id="decryptionAlert">
+      <i class="fas fa-key"></i> 
+      请输入解密秘钥来查看账号信息
+    </div>
+
+    <div class="form-container" id="decryptForm">
+      <h2 class="section-title">
+        <i class="fas fa-unlock-alt"></i> 解密信息
+      </h2>
+
+      <div class="form-group">
+        <label for="decryptionKey">解密秘钥</label>
+        <input type="text" id="decryptionKey" placeholder="请输入加密时设置的秘钥" required>
+      </div>
+
+      <div class="btn-container">
+        <button type="button" class="btn btn-success" id="decryptBtn">
+          <i class="fas fa-unlock"></i> 解密查看
+        </button>
+      </div>
+    </div>
+
+    <div class="info-container" id="accountInfo">
+      <div class="two-column-layout">
+        <div class="left-column">
+          <h2 class="section-title">
+            <i class="fas fa-user-circle"></i> 账号信息
+          </h2>
+
+          <div class="info-section">
+            <div class="info-group">
+              <div class="info-label">邮箱账号</div>
+              <div class="info-value" id="googleAccount">
+                <span class="copy-btn" onclick="copyToClipboard('googleAccount')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">邮箱密码</div>
+              <div class="info-value" id="googlePassword">
+                <span class="copy-btn" onclick="copyToClipboard('googlePassword')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">恢复手机号</div>
+              <div class="info-value" id="recoveryPhone">
+                <span class="copy-btn" onclick="copyToClipboard('recoveryPhone')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">恢复邮箱</div>
+              <div class="info-value" id="recoveryEmail">
+                <span class="copy-btn" onclick="copyToClipboard('recoveryEmail')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">注册时间</div>
+              <div class="info-value" id="registrationTime">
+                <span class="copy-btn" onclick="copyToClipboard('registrationTime')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">注册IP</div>
+              <div class="info-value" id="registrationIP">
+                <span class="copy-btn" onclick="copyToClipboard('registrationIP')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <div class="info-label">Cookie信息</div>
+              <div class="info-value cookie-scroll" id="cookieInfo">
+                <span class="copy-btn" onclick="copyToClipboard('cookieInfo')">
+                  <i class="fas fa-copy"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="right-column">
+          <h2 class="section-title">
+            <i class="fas fa-shield-alt"></i> 二因素认证 (2FA)
+          </h2>
+
+          <div class="info-group">
+            <div class="info-label">2FA Secret</div>
+            <div class="info-value secret" id="totpSecret">
+              <span class="copy-btn" onclick="copyToClipboard('totpSecret')">
+                <i class="fas fa-copy"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="tfa-card">
+            <div class="qrcode-container">
+              <div id="qrcode"></div>
+            </div>
+
+            <p>实时验证码 (点击复制)</p>
+            <div class="totp-code" id="totpCode" onclick="copyToClipboard('totpCode')">
+              ------
+            </div>
+            
+            <div class="totp-timer" id="totpTimer">剩余时间: 0秒</div>
+
+            <div class="progress-bar">
+              <div class="progress" id="totpProgress"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <button type="button" class="btn btn-warning" id="backToDecryptBtn">
+          <i class="fas fa-redo-alt"></i> 重新解密
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i> <span id="toastMessage">已复制到剪贴板</span>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 邮箱账号加密工具 | 安全 • 私密 • 便捷</p>
+  </footer>
+
+  <script>
+    // DOM元素
+    const decryptForm = document.getElementById('decryptForm');
+    const accountInfo = document.getElementById('accountInfo');
+    const decryptionAlert = document.getElementById('decryptionAlert');
+    const decryptionKeyInput = document.getElementById('decryptionKey');
+    const decryptBtn = document.getElementById('decryptBtn');
+    const backToDecryptBtn = document.getElementById('backToDecryptBtn');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const totpProgress = document.getElementById('totpProgress');
+    const totpCode = document.getElementById('totpCode');
+    const totpTimer = document.getElementById('totpTimer');
+    
+    // 获取URL中的加密数据
+    function getEncryptedDataFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('data');
+    }
+    
+    // 获取URL中的密钥数据
+    function getKeyFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('key');
+    }
+    
+    // 解密数据
+    function decryptData(encryptedData, key) {
+      try {
+        const decrypted = CryptoJS.AES.decrypt(encryptedData, key).toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decrypted);
+      } catch (error) {
+        console.error('解密失败:', error);
+        return null;
+      }
+    }
+    
+    // 显示提示消息
+    function showToast(message, type = 'success') {
+      toastMessage.textContent = message;
+      toast.className = `toast show ${type}`;
+      
+      if (type === 'error') {
+        toast.style.background = 'var(--accent-color)';
+      } else {
+        toast.style.background = 'var(--success-color)';
+      }
+      
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
+    }
+    
+    // 复制到剪贴板
+    function copyToClipboard(elementId) {
+      const element = document.getElementById(elementId);
+      const text = element.innerText;
+      
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          showToast('已复制到剪贴板');
+        })
+        .catch(err => {
+          console.error('复制失败:', err);
+          showToast('复制失败，请手动复制', 'error');
+        });
+    }
+    
+    // 生成TOTP验证码
+    function generateTOTP(secret) {
+      try {
+        // Base32解码为十六进制
+        const key = base32tohex(secret);
+        // 获取30秒间隔的时间戳
+        const epoch = Math.round(new Date().getTime() / 1000.0);
+        const time = leftpad(dec2hex(Math.floor(epoch / 30)), 16, '0');
+        
+        // 使用jsSHA计算HMAC
+        const hmacObj = new jsSHA('SHA-1', 'HEX');
+        hmacObj.setHMACKey(key, 'HEX');
+        hmacObj.update(time);
+        const hmac = hmacObj.getHMAC('HEX');
+        
+        // 计算动态验证码
+        const offset = hex2dec(hmac.substring(hmac.length - 1));
+        const truncatedHash = (hex2dec(hmac.substr(offset * 2, 8)) & hex2dec('7fffffff')) + '';
+        return truncatedHash.substr(truncatedHash.length - 6, 6);
+      } catch (e) {
+        console.error('生成TOTP失败:', e);
+        return '------';
+      }
+    }
+    
+    // 更新TOTP验证码
+    function updateTOTP(secret) {
+      if (!secret) {
+        totpCode.textContent = '------';
+        totpTimer.textContent = '剩余时间: 0秒';
+        return;
+      }
+      
+      // 计算剩余时间
+      const epoch = Math.floor(Date.now() / 1000);
+      const remain = 30 - (epoch % 30);
+      
+      // 更新验证码
+      const code = generateTOTP(secret);
+      totpCode.textContent = code;
+      
+      // 更新剩余时间显示
+      totpTimer.textContent = `剩余时间: ${remain}秒`;
+      
+      // 更新进度条
+      totpProgress.style.width = `${((30 - remain) / 30) * 100}%`;
+      
+      // 如果即将过期（剩余5秒或更少），改变颜色提醒用户
+      if (remain <= 5) {
+        totpTimer.style.color = 'var(--accent-color)';
+      } else {
+        totpTimer.style.color = '';
+      }
+    }
+    
+    // 生成二维码
+    function generateQRCode(account, secret) {
+      if (!secret) return;
+      
+      const qrcodeElement = document.getElementById('qrcode');
+      qrcodeElement.innerHTML = ''; // 清空容器
+      
+      // 创建TOTP URI
+      const issuer = 'Email';
+      const otpauthURL = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+      
+      // 生成二维码
+      new QRCode(qrcodeElement, {
+        text: otpauthURL,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+    
+    // 填充账号信息
+    function fillAccountInfo(data) {
+      if (!data) return false;
+      
+      document.getElementById('googleAccount').textContent = data.googleAccount || '未提供';
+      document.getElementById('googlePassword').textContent = data.googlePassword || '未提供';
+      document.getElementById('recoveryPhone').textContent = data.recoveryPhone || '未提供';
+      document.getElementById('recoveryEmail').textContent = data.recoveryEmail || '未提供';
+      document.getElementById('registrationTime').textContent = data.registrationTime || '未提供';
+      document.getElementById('registrationIP').textContent = data.registrationIP || '未提供';
+      document.getElementById('cookieInfo').textContent = data.cookieInfo || '未提供';
+      document.getElementById('totpSecret').textContent = data.totpSecret || '未提供';
+      
+      // 生成TOTP二维码
+      generateQRCode(data.googleAccount, data.totpSecret);
+      
+      // 初始化TOTP验证码更新
+      updateTOTP(data.totpSecret);
+      
+      // 设置定时更新
+      setInterval(() => {
+        updateTOTP(data.totpSecret);
+      }, 1000);
+      
+      return true;
+    }
+    
+    // 解密按钮点击事件
+    decryptBtn.addEventListener('click', () => {
+      const encryptedData = getEncryptedDataFromUrl();
+      const decryptionKey = decryptionKeyInput.value.trim();
+      
+      if (!encryptedData) {
+        showToast('URL中没有加密数据', 'error');
+        return;
+      }
+      
+      if (!decryptionKey) {
+        showToast('请输入解密秘钥', 'error');
+        return;
+      }
+      
+      const decryptedData = decryptData(encryptedData, decryptionKey);
+      
+      if (!decryptedData) {
+        showToast('解密失败，请检查秘钥是否正确', 'error');
+        return;
+      }
+      
+      if (fillAccountInfo(decryptedData)) {
+        decryptForm.style.display = 'none';
+        accountInfo.style.display = 'block';
+        decryptionAlert.style.display = 'none';
+      } else {
+        showToast('数据格式错误', 'error');
+      }
+    });
+    
+    // 返回解密表单按钮点击事件
+    backToDecryptBtn.addEventListener('click', () => {
+      decryptForm.style.display = 'block';
+      accountInfo.style.display = 'none';
+      decryptionAlert.style.display = 'block';
+      decryptionKeyInput.value = '';
+    });
+    
+    // 工具函数
+    function dec2hex(s) { return (s < 15.5 ? '0' : '') + Math.round(s).toString(16); }
+    function hex2dec(s) { return parseInt(s, 16); }
+    
+    function leftpad(s, l, p) { 
+      return s.length >= l ? s : Array(l - s.length + 1).join(p) + s; 
+    }
+    
+    function base32tohex(base32) {
+      const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      let bits = '';
+      let hex = '';
+      
+      // 移除所有填充字符
+      base32 = base32.replace(/=+$/, '').toUpperCase();
+      
+      // 转换为二进制位
+      for (let i = 0; i < base32.length; i++) {
+        const val = base32chars.indexOf(base32.charAt(i));
+        if (val === -1) continue; // 跳过无效字符
+        bits += leftpad(val.toString(2), 5, '0');
+      }
+      
+      // 每4位二进制转为一个十六进制字符
+      for (let i = 0; i + 4 <= bits.length; i += 4) {
+        const chunk = bits.substr(i, 4);
+        hex += parseInt(chunk, 2).toString(16);
+      }
+      
+      return hex;
+    }
+    
+    // 检查URL中是否有加密数据和密钥
+    window.addEventListener('load', () => {
+      const encryptedData = getEncryptedDataFromUrl();
+      const urlKey = getKeyFromUrl();
+      
+      if (!encryptedData) {
+        decryptionAlert.innerHTML = `
+          <i class="fas fa-exclamation-triangle"></i> 
+          URL中不包含加密数据，请返回 <a href="encrypt.html">加密页面</a> 生成数据
+        `;
+        decryptBtn.disabled = true;
+        return;
+      }
+      
+      // 如果URL中包含密钥，自动尝试解密
+      if (urlKey) {
+        decryptionKeyInput.value = urlKey;
+        decryptionAlert.innerHTML = `
+          <i class="fas fa-spinner fa-spin"></i> 
+          正在尝试使用URL中的密钥自动解密...
+        `;
+        
+        // 延迟一点点时间以确保DOM元素都已经加载
+        setTimeout(() => {
+          const decryptedData = decryptData(encryptedData, urlKey);
+          
+          if (decryptedData && fillAccountInfo(decryptedData)) {
+            // 解密成功，显示信息
+            decryptForm.style.display = 'none';
+            accountInfo.style.display = 'block';
+            decryptionAlert.style.display = 'none';
+            showToast('使用URL中的密钥解密成功', 'success');
+          } else {
+            // 解密失败，提示用户手动输入
+            decryptionAlert.innerHTML = `
+              <i class="fas fa-exclamation-triangle"></i> 
+              URL中的密钥解密失败，请手动输入正确的解密秘钥
+            `;
+            decryptionKeyInput.value = '';
+            showToast('自动解密失败，请手动输入密钥', 'error');
+          }
+        }, 300);
+      }
+      
+      // 设置页面标题
+      document.title = '邮箱账号信息查看';
+    });
+  </script>
+</body>
+</html>

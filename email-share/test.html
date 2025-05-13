@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加密解密测试</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #4285F4;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      margin: 20px auto;
+    }
+    button:hover {
+      background: #3367d6;
+    }
+    .info {
+      margin-top: 20px;
+      background: #f1f1f1;
+      padding: 15px;
+      border-radius: 5px;
+      word-break: break-all;
+    }
+    .success {
+      color: #34A853;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>加密解密测试</h1>
+  
+  <div class="card">
+    <h2>测试说明</h2>
+    <p>此页面用于测试加密和解密功能。点击下方按钮，将自动生成测试数据、加密并重定向到解密页面。</p>
+    <p>测试用解密密钥: <strong id="testKey">testKey123</strong></p>
+    
+    <button id="testBtn">开始自动测试</button>
+    
+    <div class="info" id="info"></div>
+  </div>
+  
+  <script>
+    const testKey = 'testKey123';
+    document.getElementById('testKey').textContent = testKey;
+    
+    // 生成测试数据
+    const testData = {
+      googleAccount: 'test@gmail.com',
+      googlePassword: 'SecurePassword123!',
+      recoveryPhone: '+86 13812345678',
+      recoveryEmail: 'recovery@example.com',
+      totpSecret: 'JBSWY3DPEHPK3PXP',
+      registrationTime: '2023-01-15',
+      registrationIP: '192.168.1.1',
+      cookieInfo: 'sid=Ab3XcF; session=12345; auth=true'
+    };
+    
+    // 加密函数
+    function encryptData(data, key) {
+      return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+    }
+    
+    // 点击测试按钮
+    document.getElementById('testBtn').addEventListener('click', () => {
+      const infoDiv = document.getElementById('info');
+      
+      try {
+        // 加密数据
+        const encrypted = encryptData(testData, testKey);
+        
+        // 显示信息
+        infoDiv.innerHTML = `
+          <p class="success">测试数据已加密成功！</p>
+          <p>原始数据:</p>
+          <pre>${JSON.stringify(testData, null, 2)}</pre>
+          <p>加密后:</p>
+          <div>${encrypted.slice(0, 50)}...</div>
+          <p>正在跳转到解密页面...</p>
+        `;
+        
+        // 构建URL并跳转
+        const url = `decrypt.html?data=${encodeURIComponent(encrypted)}`;
+        
+        // 3秒后跳转
+        setTimeout(() => {
+          window.location.href = url;
+        }, 3000);
+        
+      } catch (error) {
+        infoDiv.innerHTML = `<p style="color:red">错误: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

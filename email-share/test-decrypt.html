@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试解密页面</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    
+    h1 {
+      color: #4285F4;
+    }
+    
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+  </style>
+</head>
+<body>
+  <h1>测试解密页面</h1>
+  <p>点击下方按钮生成测试URL并自动跳转</p>
+  
+  <button id="generateButton">生成测试链接并跳转</button>
+  
+  <script>
+    document.getElementById('generateButton').addEventListener('click', function() {
+      // 模拟账号数据
+      const accountData = {
+        googleAccount: "test@gmail.com",
+        googlePassword: "Str0ng&P@ssw0rd!123",
+        recoveryPhone: "+86 13812345678",
+        recoveryEmail: "recovery@example.com",
+        totpSecret: "JBSWY3DPEHPK3PXP", // 标准测试Secret
+        registrationTime: "2023-05-15",
+        registrationIP: "192.168.1.123",
+        cookieInfo: "SESSION=abcdef123456; AUTH=xyz789; PATH=/; DOMAIN=.google.com;".repeat(10) // 重复多次以测试滚动条
+      };
+      
+      // 加密密钥
+      const encryptionKey = "testKey123";
+      
+      // 加密数据
+      const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(accountData), encryptionKey).toString();
+      
+      // 生成URL（包含密钥）
+      const url = `google/decrypt.html?data=${encodeURIComponent(encryptedData)}&key=${encryptionKey}`;
+      
+      // 跳转
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>
