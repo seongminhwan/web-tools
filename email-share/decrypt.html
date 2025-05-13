@@ -602,6 +602,15 @@
               </span>
             </div>
           </div>
+          
+          <div class="info-group">
+            <div class="info-label">TOTP URI</div>
+            <div class="info-value" id="totpUri" style="font-size: 12px; word-break: break-all;">
+              <span class="copy-btn" onclick="copyToClipboard('totpUri')">
+                <i class="fas fa-copy"></i>
+              </span>
+            </div>
+          </div>
 
           <div class="tfa-card">
             <div class="qrcode-container">
@@ -771,6 +780,9 @@
       // 创建TOTP URI
       const issuer = 'Email';
       const otpauthURL = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+      
+      // 设置完整URI显示
+      document.getElementById('totpUri').textContent = otpauthURL;
       
       // 生成二维码
       new QRCode(qrcodeElement, {
