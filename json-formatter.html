@@ -107,6 +107,7 @@
 
     .json-input-section, .json-output-section {
       flex: 1;
+      min-width: 0; /* 防止flex项目超出容器 */
       background: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
@@ -153,7 +154,30 @@
       overflow: auto;
       background-color: #fafafa;
       white-space: pre-wrap;
+      word-break: break-word; /* 允许在任何字符处换行 */
+      word-wrap: break-word; /* 兼容性支持 */
       line-height: 1.5;
+    }
+    
+    /* 高亮显示的JSON内部样式调整 */
+    .json-preview pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      word-wrap: break-word;
+    }
+    
+    .json-preview code {
+      white-space: pre-wrap;
+      word-break: break-word;
+      word-wrap: break-word;
+    }
+    
+    /* 为字符串值添加换行支持 */
+    .hljs-string {
+      white-space: pre-wrap;
+      word-break: break-word;
+      word-wrap: break-word;
     }
 
     .json-preview.editable {
@@ -508,14 +532,22 @@
           // 格式化JSON
           const formattedJSON = JSON.stringify(parsedJSON, null, indent);
           
-          // 显示格式化结果
-          if (highlightSyntax.checked) {
-            // 使用highlight.js进行语法高亮
-            jsonOutput.innerHTML = `<pre><code class="language-json">${formattedJSON}</code></pre>`;
-            hljs.highlightAll();
-          } else {
-            jsonOutput.textContent = formattedJSON;
-          }
+      // 显示格式化结果
+      if (highlightSyntax.checked) {
+        // 使用highlight.js进行语法高亮
+        jsonOutput.innerHTML = `<pre><code class="language-json">${formattedJSON}</code></pre>`;
+        hljs.highlightAll();
+        
+        // 为所有字符串值添加额外的样式
+        const stringElements = jsonOutput.querySelectorAll('.hljs-string');
+        stringElements.forEach(el => {
+          el.style.whiteSpace = 'pre-wrap';
+          el.style.wordBreak = 'break-word';
+          el.style.wordWrap = 'break-word';
+        });
+      } else {
+        jsonOutput.textContent = formattedJSON;
+      }
           
           showStatus('JSON格式化成功！', 'success');
         } catch (error) {
@@ -565,6 +597,14 @@
           if (highlightSyntax.checked) {
             jsonOutput.innerHTML = `<pre><code class="language-json">${formattedJSON}</code></pre>`;
             hljs.highlightAll();
+            
+            // 为所有字符串值添加额外的样式
+            const stringElements = jsonOutput.querySelectorAll('.hljs-string');
+            stringElements.forEach(el => {
+              el.style.whiteSpace = 'pre-wrap';
+              el.style.wordBreak = 'break-word';
+              el.style.wordWrap = 'break-word';
+            });
           } else {
             jsonOutput.textContent = formattedJSON;
           }
