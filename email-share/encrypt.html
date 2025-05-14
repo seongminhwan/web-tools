@@ -1435,6 +1435,15 @@
       showToast('备注已保存');
     });
     
+    // 确保模态框只能通过关闭按钮关闭，点击其他区域不会自动关闭
+    window.addEventListener('click', (event) => {
+      // 点击的是模态框背景但不是模态框内容时不要关闭
+      if (event.target === notesModal) {
+        // 什么也不做，阻止默认的关闭行为
+        return;
+      }
+    });
+    
     // 更新备注指示器
     function updateNotesIndicator() {
       const notesText = accountNotesTextarea.value.trim();
