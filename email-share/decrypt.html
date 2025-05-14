@@ -754,6 +754,13 @@
     const totpCode = document.getElementById('totpCode');
     const totpTimer = document.getElementById('totpTimer');
     
+    // 模态框元素
+    const notesModal = document.getElementById('notesModal');
+    const modalNotes = document.getElementById('modalNotes');
+    const closeNotesModal = document.getElementById('closeNotesModal');
+    const notesGroup = document.getElementById('notesGroup');
+    const viewNotesBtn = document.getElementById('viewNotesBtn');
+    
     // 获取URL中的加密数据
     function getEncryptedDataFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
