@@ -456,14 +456,20 @@
     
     /* 标签页相关样式 */
     .tabs-container {
-      position: relative;
-      margin-bottom: 30px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      padding-top: 10px;
       display: none; /* 初始隐藏，有标签时显示 */
       width: 100% !important;
       box-sizing: border-box;
       overflow: hidden; /* 防止溢出 */
-      transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* 添加与container相同的过渡效果 */
-      z-index: 0; /* 确保在sidebar下面 */
+      transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* 添加过渡效果 */
+      z-index: 900; /* 比侧边栏低 */
+      background-color: var(--background-color);
     }
     
     .tabs-header {
@@ -926,12 +932,14 @@
         mainContainer.classList.toggle('sidebar-open');
         sidebarToggle.classList.toggle('active');
         
-        // 如果有标签页打开，确保tab容器随主容器一起移动
+        // 如果有标签页打开，直接调整标签容器位置
         if (mainContainer.classList.contains('has-tabs')) {
-          // 标签页容器位置会通过CSS自动处理
-          // 重新计算标签页容器的宽度，解决可能的布局问题
-          if (window.innerWidth >= 768) {
-            tabsContainer.style.width = '100%';
+          if (sidebar.classList.contains('open')) {
+            // 侧边栏打开，将标签容器向右移动
+            tabsContainer.style.left = '300px';
+          } else {
+            // 侧边栏关闭，标签容器恢复原位
+            tabsContainer.style.left = '0';
           }
         }
       });
@@ -1026,14 +1034,19 @@
       tabsContainer.style.display = 'block';
       mainContainer.classList.add('has-tabs');
       
-      // 如果侧边栏已打开，在非移动设备上保持标签页位置正确
-      if (sidebar.classList.contains('open') && window.innerWidth >= 768) {
-        // 标签页容器位置会通过CSS自动处理
-      } else if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
-        // 在移动设备上，打开标签页时自动关闭侧边栏以避免遮挡
+      // 根据侧边栏状态调整标签容器位置
+      if (sidebar.classList.contains('open')) {
+        tabsContainer.style.left = '300px';
+      } else {
+        tabsContainer.style.left = '0';
+      }
+      
+      // 在移动设备上，打开标签页时自动关闭侧边栏以避免遮挡
+      if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
         sidebar.classList.remove('open');
         mainContainer.classList.remove('sidebar-open');
         sidebarToggle.classList.remove('active');
+        tabsContainer.style.left = '0';
       }
     }
     
