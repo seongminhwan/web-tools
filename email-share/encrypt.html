@@ -8,6 +8,7 @@
   <style>
     :root {
       --primary-color: #4285F4; /* Google蓝 */
+      --primary-dark: #3367d6; /* 深蓝色，用于悬停状态 */
       --secondary-color: #34A853; /* Google绿 */
       --accent-color: #EA4335; /* Google红 */
       --warning-color: #FBBC05; /* Google黄 */
@@ -448,6 +449,138 @@
       transition: var(--transition);
     }
 
+    /* 模态框样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      margin: 50px auto;
+      width: 80%;
+      max-width: 900px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+
+    .modal-header {
+      padding: 15px 20px;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .modal-close {
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0 8px;
+    }
+
+    .modal-close:hover {
+      color: #ddd;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 15px 20px;
+      background-color: #f5f5f5;
+      text-align: right;
+      border-top: 1px solid #ddd;
+    }
+
+    .notes-container {
+      display: flex;
+      gap: 20px;
+      height: 300px;
+    }
+
+    .notes-input {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notes-input textarea {
+      flex: 1;
+      resize: none;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    .notes-preview {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notes-preview .preview-title {
+      padding: 8px 12px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      font-weight: 600;
+    }
+
+    .notes-preview .markdown-content {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background-color: white;
+    }
+
+    /* 备注按钮样式 */
+    .notes-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--primary-color);
+      transition: background-color 0.2s;
+    }
+
+    .notes-btn:hover {
+      background-color: #e5e5e5;
+    }
+
+    .notes-btn i {
+      font-size: 16px;
+    }
+
     /* 响应式调整 */
     @media (max-width: 768px) {
       .container {
@@ -483,6 +616,16 @@
       #emailDomain, #emailPrefix {
         width: 100%;
       }
+      
+      .notes-container {
+        flex-direction: column;
+        height: auto;
+      }
+      
+      .notes-input, .notes-preview {
+        flex: none;
+        height: 200px;
+      }
     }
 
     /* 暗色模式 */
@@ -502,6 +645,29 @@
 
       .result-value {
         background: #2a2a2a;
+      }
+      
+      .notes-btn {
+        background-color: #2a2a2a;
+        border-color: #444;
+      }
+      
+      .notes-btn:hover {
+        background-color: #333;
+      }
+      
+      .notes-preview .preview-title {
+        background-color: #2a2a2a;
+        border-color: #444;
+      }
+      
+      .notes-preview .markdown-content {
+        background-color: #252525;
+      }
+      
+      .modal-footer {
+        background-color: #252525;
+        border-color: #444;
       }
     }
   </style>
@@ -583,6 +749,14 @@
               <label for="cookieInfo">Cookie信息 <span class="optional">(选填)</span></label>
               <textarea id="cookieInfo" rows="3" placeholder="请输入Cookie信息"></textarea>
             </div>
+            
+            <div class="form-group">
+              <label>账号备注 <span class="optional">(选填，支持Markdown语法)</span></label>
+              <button type="button" class="notes-btn" id="openNotesBtn">
+                <i class="fas fa-edit"></i> 编辑账号备注
+              </button>
+              <div id="notesIndicator" style="margin-top: 8px; font-size: 14px; color: var(--text-light);"></div>
+            </div>
           </div>
           
           <div class="right-column">
@@ -612,21 +786,6 @@
                 <div id="qrcode-preview"></div>
                 <div class="totp-code-preview" id="totp-code-preview" onclick="copyTOTP()">------</div>
                 <div class="totp-timer" id="totp-timer">剩余时间: 30秒</div>
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="accountNotes">账号备注 <span class="optional">(选填，支持Markdown语法)</span></label>
-              <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                  <textarea id="accountNotes" rows="5" placeholder="在此输入备注信息，支持Markdown语法" oninput="updateNotesPreview()"></textarea>
-                </div>
-                <div style="flex: 1;">
-                  <div class="preview-container" style="height: 100%; margin: 0; padding: 10px; overflow: auto;">
-                    <div class="preview-title">预览</div>
-                    <div id="notesPreview" style="font-size: 14px;"></div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -703,6 +862,33 @@
       </div>
     </div>
   </div>
+  
+  <!-- 备注编辑模态框 -->
+  <div id="notesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-edit"></i> 编辑账号备注</h2>
+        <span class="modal-close" id="closeNotesModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="notes-container">
+          <div class="notes-input">
+            <h3>编辑 <small>(支持Markdown语法)</small></h3>
+            <textarea id="accountNotes" placeholder="在此输入备注信息，支持Markdown语法" oninput="updateNotesPreview()"></textarea>
+          </div>
+          <div class="notes-preview">
+            <div class="preview-title">预览</div>
+            <div id="notesPreview" class="markdown-content"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="saveNotesBtn">
+          <i class="fas fa-save"></i> 保存备注
+        </button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <p>&copy; 2025 邮箱账号加密工具 | 安全 • 私密 • 便捷</p>
@@ -727,6 +913,15 @@
     const previewLink = document.getElementById('previewLink');
     const backToFormBtn = document.getElementById('backToFormBtn');
     const accountForm = document.getElementById('accountForm');
+    
+    // 备注相关元素
+    const notesModal = document.getElementById('notesModal');
+    const openNotesBtn = document.getElementById('openNotesBtn');
+    const closeNotesModal = document.getElementById('closeNotesModal');
+    const saveNotesBtn = document.getElementById('saveNotesBtn');
+    const accountNotesTextarea = document.getElementById('accountNotes');
+    const notesPreview = document.getElementById('notesPreview');
+    const notesIndicator = document.getElementById('notesIndicator');
 
     // 生成随机邮箱前缀
     function generateRandomEmailPrefix() {
@@ -968,12 +1163,16 @@
 
     // 从表单收集数据
     function collectFormData() {
+      // 获取原始TOTP URI
+      const totpUriValue = document.getElementById('totpUri').value.trim();
+      
       return {
         googleAccount: getFullEmail(),
         googlePassword: document.getElementById('googlePassword').value,
         recoveryPhone: document.getElementById('recoveryPhone').value,
         recoveryEmail: document.getElementById('recoveryEmail').value,
         totpSecret: document.getElementById('totpSecret').value,
+        totpUri: totpUriValue, // 保存完整的原始URI
         registrationTime: document.getElementById('registrationTime').value,
         registrationIP: document.getElementById('registrationIP').value,
         cookieInfo: document.getElementById('cookieInfo').value,
@@ -991,6 +1190,10 @@
       if (confirm('确定要重置所有输入的信息吗？')) {
         accountForm.reset();
         emailDomainSelect.value = 'gmail.com';
+        document.getElementById('customDomain').style.display = 'none';
+        document.getElementById('accountNotes').value = '';
+        updateNotesIndicator();
+        showToast('已重置所有表单数据');
       }
     });
 
@@ -1185,7 +1388,7 @@
         return;
       }
       
-      // 获取当前页面URL的基础路径
+      // 获取当前页面URL的基础路径（使用绝对URL）
       const currentUrl = window.location.href;
       const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
       
@@ -1216,12 +1419,40 @@
     backToFormBtn.addEventListener('click', () => {
       resultContainer.style.display = 'none';
     });
+    
+    // 备注模态框相关逻辑
+    openNotesBtn.addEventListener('click', () => {
+      notesModal.style.display = 'block';
+    });
+    
+    closeNotesModal.addEventListener('click', () => {
+      notesModal.style.display = 'none';
+    });
+    
+    saveNotesBtn.addEventListener('click', () => {
+      notesModal.style.display = 'none';
+      updateNotesIndicator();
+      showToast('备注已保存');
+    });
+    
+    // 更新备注指示器
+    function updateNotesIndicator() {
+      const notesText = accountNotesTextarea.value.trim();
+      if (notesText) {
+        const wordCount = notesText.split(/\s+/).filter(Boolean).length;
+        const charCount = notesText.length;
+        notesIndicator.innerHTML = `<i class="fas fa-check-circle" style="color: var(--secondary-color);"></i> 已添加备注 (${wordCount}词/${charCount}字符)`;
+      } else {
+        notesIndicator.innerHTML = '';
+      }
+    }
 
     // 页面加载时自动生成一个秘钥并初始化Markdown预览
     window.addEventListener('load', () => {
       encryptionKeyInput.value = generateRandomKey();
       document.title = '邮箱账号加密工具';
       updateNotesPreview(); // 初始化Markdown预览
+      updateNotesIndicator(); // 初始化备注指示器
     });
   </script>
 </body>
