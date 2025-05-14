@@ -551,7 +551,8 @@
       padding: 0 !important; /* 移除内边距 */
       margin: 0 !important; /* 移除外边距 */
       box-sizing: border-box;
-      overflow: hidden; /* 防止内容溢出 */
+      overflow: auto; /* 允许内容溢出时显示滚动条 */
+      position: relative; /* 为iframe提供定位上下文 */
     }
     
     .tab-panel.active {
@@ -570,11 +571,8 @@
       box-sizing: border-box;
       border-radius: 0 !important; /* 移除边框圆角 */
       box-shadow: none !important; /* 移除阴影 */
-      position: absolute !important; /* 使用绝对定位 */
-      left: 0 !important;
-      right: 0 !important;
-      top: 0 !important;
-      bottom: 0 !important;
+      position: relative !important; /* 使用相对定位 */
+      overflow: auto !important; /* 允许iframe内容滚动 */
     }
     
     .home-panel {
