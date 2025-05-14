@@ -459,6 +459,7 @@
       position: relative;
       margin-bottom: 30px;
       display: none; /* 初始隐藏，有标签时显示 */
+      width: 100%;
     }
     
     .tabs-header {
@@ -535,16 +536,19 @@
     
     .tabs-content {
       margin-top: 20px;
+      width: 100%;
     }
     
     .tab-panel {
       display: none;
       height: calc(100vh - 280px);
       min-height: 500px;
+      width: 100%;
     }
     
     .tab-panel.active {
       display: block;
+      width: 100%;
     }
     
     .tab-panel iframe {
@@ -553,6 +557,7 @@
       border: none;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
+      display: block; /* 确保iframe是块级元素 */
     }
     
     .home-panel {
