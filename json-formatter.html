@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON格式化工具 - 网络安全工具集</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4285F4; /* Google蓝 */
+      --primary-dark: #3367d6; /* 深蓝色，用于悬停状态 */
+      --secondary-color: #34A853; /* Google绿 */
+      --accent-color: #EA4335; /* Google红 */
+      --warning-color: #FBBC05; /* Google黄 */
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --text-light: #666666;
+      --border-color: #e0e0e0;
+      --border-radius: 12px;
+      --shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--accent-color);
+      border-radius: 2px;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      margin-top: 20px;
+      font-size: 1.1rem;
+    }
+
+    .alert {
+      background-color: var(--warning-color);
+      color: #333;
+      padding: 15px 20px;
+      border-radius: var(--border-radius);
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-icon {
+      font-size: 20px;
+    }
+
+    .json-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    @media (min-width: 992px) {
+      .json-container {
+        flex-direction: row;
+      }
+    }
+
+    .json-input-section, .json-output-section {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .json-textarea {
+      width: 100%;
+      height: 400px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      resize: vertical;
+      line-height: 1.5;
+      background-color: #fafafa;
+    }
+
+    .json-textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    }
+
+    .json-preview {
+      width: 100%;
+      height: 400px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      overflow: auto;
+      background-color: #fafafa;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .json-preview.editable {
+      outline: none;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary-color);
+    }
+
+    .btn-secondary:hover {
+      background-color: #2e9348;
+    }
+
+    .btn-danger {
+      background-color: var(--accent-color);
+    }
+
+    .btn-danger:hover {
+      background-color: #d33426;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+    }
+
+    .btn-outline:hover {
+      background-color: rgba(66, 133, 244, 0.1);
+    }
+
+    .options {
+      margin-top: 15px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .option-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .option-label {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--secondary-color);
+      min-height: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .status-msg.show {
+      opacity: 1;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 20px;
+      transition: var(--transition);
+    }
+
+    .home-link:hover {
+      color: var(--accent-color);
+    }
+
+    /* 暗色模式 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-light: #a0a0a0;
+        --border-color: #333333;
+      }
+      
+      .json-textarea,
+      .json-preview {
+        background-color: #252525;
+        color: #e0e0e0;
+      }
+      
+      .hljs {
+        background-color: #252525;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>JSON格式化工具</h1>
+      <p class="subtitle">在线美化、格式化、编辑和复制JSON数据</p>
+      
+      <a href="/" class="home-link">
+        <i class="fas fa-home"></i> 返回首页
+      </a>
+    </header>
+
+    <div class="alert">
+      <i class="fas fa-info-circle alert-icon"></i>
+      <div>
+        所有数据处理均在本地完成，不会上传到服务器，请放心使用。
+      </div>
+    </div>
+
+    <div class="json-container">
+      <div class="json-input-section">
+        <div class="section-title">
+          <i class="fas fa-code"></i> 输入JSON
+        </div>
+        <textarea id="jsonInput" class="json-textarea" placeholder='请输入您的JSON数据，例如：&#10;{&#10;  "name": "张三",&#10;  "age": 30,&#10;  "skills": ["编程", "设计"]&#10;}'></textarea>
+        <div class="button-group">
+          <button id="formatBtn" class="btn">
+            <i class="fas fa-magic"></i> 格式化
+          </button>
+          <button id="clearInputBtn" class="btn btn-outline">
+            <i class="fas fa-eraser"></i> 清空
+          </button>
+          <button id="sampleBtn" class="btn btn-outline">
+            <i class="fas fa-lightbulb"></i> 示例
+          </button>
+        </div>
+        <div class="options">
+          <div class="option-group">
+            <span class="option-label">缩进空格数:</span>
+            <select id="indentSize" class="indent-select">
+              <option value="2">2</option>
+              <option value="4" selected>4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="highlightSyntax" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="option-label">语法高亮</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="json-output-section">
+        <div class="section-title">
+          <i class="fas fa-file-code"></i> 格式化结果
+        </div>
+        <div id="jsonOutput" class="json-preview"></div>
+        <div class="button-group">
+          <button id="copyBtn" class="btn btn-secondary">
+            <i class="fas fa-copy"></i> 复制到剪贴板
+          </button>
+          <button id="editBtn" class="btn">
+            <i class="fas fa-edit"></i> 编辑
+          </button>
+          <button id="saveBtn" class="btn" style="display: none;">
+            <i class="fas fa-save"></i> 保存
+          </button>
+          <button id="downloadBtn" class="btn btn-outline">
+            <i class="fas fa-download"></i> 下载
+          </button>
+        </div>
+        <div id="statusMsg" class="status-msg"></div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 网络安全工具集 | 安全 • 私密 • 便捷</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 获取DOM元素
+      const jsonInput = document.getElementById('jsonInput');
+      const jsonOutput = document.getElementById('jsonOutput');
+      const formatBtn = document.getElementById('formatBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const editBtn = document.getElementById('editBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const clearInputBtn = document.getElementById('clearInputBtn');
+      const sampleBtn = document.getElementById('sampleBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const indentSize = document.getElementById('indentSize');
+      const highlightSyntax = document.getElementById('highlightSyntax');
+      const statusMsg = document.getElementById('statusMsg');
+
+      // 示例JSON数据
+      const sampleJson = {
+        "个人信息": {
+          "姓名": "张三",
+          "年龄": 30,
+          "职业": "软件工程师",
+          "联系方式": {
+            "电话": "13812345678",
+            "邮箱": "zhangsan@example.com"
+          }
+        },
+        "技能列表": [
+          "JavaScript",
+          "HTML",
+          "CSS",
+          "Node.js",
+          "Vue.js"
+        ],
+        "工作经历": [
+          {
+            "公司": "ABC科技有限公司",
+            "职位": "前端开发工程师",
+            "开始日期": "2018-01-01",
+            "结束日期": "2020-12-31",
+            "职责": ["网站开发", "性能优化", "代码重构"]
+          },
+          {
+            "公司": "XYZ网络科技公司",
+            "职位": "高级前端工程师",
+            "开始日期": "2021-01-01",
+            "结束日期": null,
+            "职责": ["架构设计", "团队管理", "技术选型"]
+          }
+        ],
+        "项目作品": [
+          {
+            "名称": "电子商务平台",
+            "技术栈": ["Vue.js", "Element UI", "Node.js"],
+            "描述": "一个功能完善的电子商务网站，包含商品展示、购物车、支付等功能"
+          },
+          {
+            "名称": "企业管理系统",
+            "技术栈": ["React", "Ant Design", "Express"],
+            "描述": "提供企业内部人员、财务、项目管理的综合性系统"
+          }
+        ],
+        "其他": {
+          "爱好": ["阅读", "旅行", "摄影"],
+          "语言": ["中文", "英语"],
+          "github": "https://github.com/zhangsan",
+          "备注": "这是一个示例JSON数据，用于JSON格式化工具的演示"
+        }
+      };
+
+      // 格式化JSON函数
+      function formatJSON() {
+        try {
+          const inputValue = jsonInput.value.trim();
+          
+          // 检查输入是否为空
+          if (!inputValue) {
+            showStatus('请输入JSON数据', 'warning');
+            return;
+          }
+          
+          // 解析JSON
+          const parsedJSON = JSON.parse(inputValue);
+          
+          // 获取缩进大小
+          const indent = parseInt(indentSize.value);
+          
+          // 格式化JSON
+          const formattedJSON = JSON.stringify(parsedJSON, null, indent);
+          
+          // 显示格式化结果
+          if (highlightSyntax.checked) {
+            // 使用highlight.js进行语法高亮
+            jsonOutput.innerHTML = `<pre><code class="language-json">${formattedJSON}</code></pre>`;
+            hljs.highlightAll();
+          } else {
+            jsonOutput.textContent = formattedJSON;
+          }
+          
+          showStatus('JSON格式化成功！', 'success');
+        } catch (error) {
+          showStatus(`错误：${error.message}`, 'error');
+        }
+      }
+
+      // 编辑模式切换
+      function enableEditMode() {
+        // 保存当前格式化的内容
+        const currentContent = jsonOutput.textContent || (jsonOutput.querySelector('code') ? jsonOutput.querySelector('code').textContent : '');
+        
+        // 切换为编辑模式
+        jsonOutput.innerHTML = '';
+        jsonOutput.textContent = currentContent;
+        jsonOutput.contentEditable = true;
+        jsonOutput.classList.add('editable');
+        jsonOutput.focus();
+        
+        // 显示保存按钮，隐藏编辑按钮
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-flex';
+        
+        showStatus('已启用编辑模式，编辑完成后请点击保存', 'info');
+      }
+
+      // 保存编辑内容
+      function saveEditedContent() {
+        try {
+          // 获取编辑后的内容
+          const editedContent = jsonOutput.textContent;
+          
+          // 尝试解析JSON
+          const parsedJSON = JSON.parse(editedContent);
+          
+          // 获取缩进大小
+          const indent = parseInt(indentSize.value);
+          
+          // 重新格式化JSON
+          const formattedJSON = JSON.stringify(parsedJSON, null, indent);
+          
+          // 禁用编辑模式
+          jsonOutput.contentEditable = false;
+          jsonOutput.classList.remove('editable');
+          
+          // 应用语法高亮
+          if (highlightSyntax.checked) {
+            jsonOutput.innerHTML = `<pre><code class="language-json">${formattedJSON}</code></pre>`;
+            hljs.highlightAll();
+          } else {
+            jsonOutput.textContent = formattedJSON;
+          }
+          
+          // 隐藏保存按钮，显示编辑按钮
+          saveBtn.style.display = 'none';
+          editBtn.style.display = 'inline-flex';
+          
+          // 更新输入框的内容为编辑后的内容
+          jsonInput.value = formattedJSON;
+          
+          showStatus('修改已保存！', 'success');
+        } catch (error) {
+          showStatus(`保存失败：${error.message}`, 'error');
+        }
+      }
+
+      // 复制到剪贴板
+      function copyToClipboard() {
+        try {
+          // 获取当前输出内容
+          const content = jsonOutput.textContent || (jsonOutput.querySelector('code') ? jsonOutput.querySelector('code').textContent : '');
+          
+          if (!content) {
+            showStatus('没有可复制的内容', 'warning');
+            return;
+          }
+          
+          // 复制到剪贴板
+          navigator.clipboard.writeText(content).then(() => {
+            showStatus('已复制到剪贴板！', 'success');
+          });
+        } catch (error) {
+          showStatus('复制失败，请手动选择并复制', 'error');
+          console.error('复制失败:', error);
+        }
+      }
+
+      // 下载JSON文件
+      function downloadJSON() {
+        try {
+          // 获取当前输出内容
+          const content = jsonOutput.textContent || (jsonOutput.querySelector('code') ? jsonOutput.querySelector('code').textContent : '');
+          
+          if (!content) {
+            showStatus('没有可下载的内容', 'warning');
+            return;
+          }
+          
+          // 创建Blob对象
+          const blob = new Blob([content], { type: 'application/json' });
+          
+          // 创建下载链接
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'formatted_json.json';
+          
+          // 触发下载
+          document.body.appendChild(a);
+          a.click();
+          
+          // 清理
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+          
+          showStatus('JSON文件已下载！', 'success');
+        } catch (error) {
+          showStatus('下载失败', 'error');
+          console.error('下载失败:', error);
+        }
+      }
+
+      // 显示状态消息
+      function showStatus(message, type) {
+        statusMsg.textContent = message;
+        statusMsg.classList.add('show');
+        
+        // 根据消息类型设置颜色
+        switch (type) {
+          case 'success':
+            statusMsg.style.color = 'var(--secondary-color)';
+            break;
+          case 'error':
+            statusMsg.style.color = 'var(--accent-color)';
+            break;
+          case 'warning':
+            statusMsg.style.color = 'var(--warning-color)';
+            break;
+          default:
+            statusMsg.style.color = 'var(--primary-color)';
+        }
+        
+        // 3秒后隐藏消息
+        setTimeout(() => {
+          statusMsg.classList.remove('show');
+        }, 3000);
+      }
+
+      // 按钮事件监听
+      formatBtn.addEventListener('click', formatJSON);
+      copyBtn.addEventListener('click', copyToClipboard);
+      editBtn.addEventListener('click', enableEditMode);
+      saveBtn.addEventListener('click', saveEditedContent);
+      downloadBtn.addEventListener('click', downloadJSON);
+      
+      // 清空输入
+      clearInputBtn.addEventListener('click', () => {
+        jsonInput.value = '';
+        jsonInput.focus();
+      });
+      
+      // 加载示例数据
+      sampleBtn.addEventListener('click', () => {
+        jsonInput.value = JSON.stringify(sampleJson, null, 2);
+        formatJSON();
+      });
+      
+      // 监听选项变化
+      indentSize.addEventListener('change', () => {
+        if (jsonOutput.textContent) {
+          formatJSON();
+        }
+      });
+      
+      highlightSyntax.addEventListener('change', () => {
+        if (jsonOutput.textContent) {
+          formatJSON();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
