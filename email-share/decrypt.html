@@ -921,11 +921,25 @@
       }
       
       // 处理Markdown备注
-      const notesElement = document.getElementById('accountNotes');
       if (data.accountNotes) {
-        notesElement.innerHTML = marked.parse(data.accountNotes);
+        // 在模态框中设置备注内容
+        modalNotes.innerHTML = marked.parse(data.accountNotes);
+        
+        // 显示备注按钮
+        notesGroup.style.display = 'flex';
+        
+        // 添加点击事件处理
+        viewNotesBtn.addEventListener('click', function() {
+          notesModal.style.display = 'block';
+        });
+        
+        // 关闭按钮事件
+        closeNotesModal.addEventListener('click', function() {
+          notesModal.style.display = 'none';
+        });
       } else {
-        notesElement.textContent = '未提供';
+        // 如果没有备注，隐藏按钮
+        notesGroup.style.display = 'none';
       }
       
       // 生成TOTP二维码（使用已有的URI或生成新的）
