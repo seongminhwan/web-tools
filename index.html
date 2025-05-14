@@ -369,10 +369,224 @@
         --card-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
       }
     }
+    
+    /* 侧边菜单样式 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 300px;
+      background: var(--primary-color);
+      color: white;
+      padding: 30px 20px;
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 22px;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .sidebar-toggle:hover {
+      background: var(--primary-dark);
+      transform: rotate(90deg);
+    }
+    
+    .sidebar-header {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .sidebar-title {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    
+    .sidebar-search {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .sidebar-search input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--border-radius);
+      color: white;
+      font-size: 16px;
+    }
+    
+    .sidebar-search input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .sidebar-search i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .category {
+      margin-bottom: 25px;
+    }
+    
+    .category-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tool-list {
+      list-style: none;
+    }
+    
+    .tool-item {
+      padding: 10px 10px 10px 20px;
+      margin-bottom: 5px;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+      position: relative;
+    }
+    
+    .tool-item:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 0;
+      background: white;
+      border-radius: 2px;
+      transition: height 0.3s;
+    }
+    
+    .tool-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .tool-item:hover:before {
+      height: 60%;
+    }
+    
+    .tool-item a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tool-item i {
+      min-width: 20px;
+      text-align: center;
+    }
+    
+    .tool-item-hidden {
+      display: none;
+    }
+    
+    /* 给容器添加左侧边距，避免被侧边栏覆盖 */
+    @media (min-width: 769px) {
+      .container {
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .container.sidebar-open {
+        margin-left: 300px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- 侧边菜单 -->
+  <button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">工具导航</div>
+      <div class="sidebar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="toolSearch" placeholder="搜索工具..." oninput="filterTools()">
+      </div>
+    </div>
+    
+    <div class="category">
+      <div class="category-title">
+        <i class="fas fa-lock"></i> 加密工具
+      </div>
+      <ul class="tool-list">
+        <li class="tool-item" data-name="邮箱账号加密 加密 分享">
+          <a href="email-share/encrypt.html">
+            <i class="fas fa-share-alt"></i> 邮箱账号加密
+          </a>
+        </li>
+        <!-- 可添加更多加密工具 -->
+      </ul>
+    </div>
+    
+    <div class="category">
+      <div class="category-title">
+        <i class="fas fa-unlock-alt"></i> 解密工具
+      </div>
+      <ul class="tool-list">
+        <li class="tool-item" data-name="邮箱账号解密 解密 查看">
+          <a href="email-share/decrypt.html">
+            <i class="fas fa-key"></i> 邮箱账号解密
+          </a>
+        </li>
+        <!-- 可添加更多解密工具 -->
+      </ul>
+    </div>
+    
+    <div class="category">
+      <div class="category-title">
+        <i class="fas fa-shield-alt"></i> 验证工具
+      </div>
+      <ul class="tool-list">
+        <li class="tool-item" data-name="2FA 二因素认证 验证码 TOTP">
+          <a href="2fa.html">
+            <i class="fas fa-qrcode"></i> 2FA验证器
+          </a>
+        </li>
+        <!-- 可添加更多验证工具 -->
+      </ul>
+    </div>
+  </div>
+  <div class="container" id="mainContainer">
     <header>
       <h1>网络安全工具集</h1>
       <p class="subtitle">一站式解决您的网络安全需求，包括邮箱账号加密分享、2FA验证码生成等功能。所有操作均在本地完成，不会向服务器传输任何敏感数据，保障您的信息安全。</p>
@@ -488,5 +702,64 @@
     </div>
     <p>&copy; 2025 网络安全工具集 | 安全 • 私密 • 便捷</p>
   </footer>
+  
+  <script>
+    // 侧边栏切换
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const mainContainer = document.getElementById('mainContainer');
+    
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      mainContainer.classList.toggle('sidebar-open');
+      sidebarToggle.classList.toggle('active');
+    });
+    
+    // 工具搜索过滤功能
+    function filterTools() {
+      const searchInput = document.getElementById('toolSearch');
+      const filter = searchInput.value.toLowerCase();
+      const toolItems = document.querySelectorAll('.tool-item');
+      
+      let hasResults = false;
+      
+      toolItems.forEach(item => {
+        const text = item.getAttribute('data-name').toLowerCase();
+        if (text.includes(filter)) {
+          item.classList.remove('tool-item-hidden');
+          hasResults = true;
+        } else {
+          item.classList.add('tool-item-hidden');
+        }
+      });
+      
+      // 显示或隐藏类别标题
+      document.querySelectorAll('.category').forEach(category => {
+        const visibleItems = category.querySelectorAll('.tool-item:not(.tool-item-hidden)');
+        if (visibleItems.length > 0) {
+          category.style.display = 'block';
+        } else {
+          category.style.display = 'none';
+        }
+      });
+      
+      // 如果没有结果，显示提示信息
+      if (!hasResults && filter) {
+        // 可以添加一个无结果提示元素
+      }
+    }
+    
+    // 点击页面其他区域关闭侧边栏
+    document.addEventListener('click', (event) => {
+      // 如果点击的不是侧边栏内部元素，也不是切换按钮，则关闭侧边栏
+      if (!sidebar.contains(event.target) && 
+          event.target !== sidebarToggle && 
+          !sidebarToggle.contains(event.target) && 
+          sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        mainContainer.classList.remove('sidebar-open');
+      }
+    });
+  </script>
 </body>
 </html>
