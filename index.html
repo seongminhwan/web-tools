@@ -460,6 +460,8 @@
       margin-bottom: 30px;
       display: none; /* 初始隐藏，有标签时显示 */
       width: 100%;
+      box-sizing: border-box;
+      overflow: hidden; /* 防止溢出 */
     }
     
     .tabs-header {
@@ -537,6 +539,8 @@
     .tabs-content {
       margin-top: 20px;
       width: 100%;
+      padding: 0; /* 移除可能的内边距 */
+      box-sizing: border-box;
     }
     
     .tab-panel {
@@ -544,24 +548,37 @@
       height: calc(100vh - 280px);
       min-height: 500px;
       width: 100%;
+      padding: 0; /* 移除内边距 */
+      margin: 0; /* 移除外边距 */
+      box-sizing: border-box;
+      overflow: hidden; /* 防止内容溢出 */
     }
     
     .tab-panel.active {
       display: block;
       width: 100%;
+      max-width: 100%; /* 确保不超过容器宽度 */
     }
     
     .tab-panel iframe {
       width: 100%;
       height: 100%;
       border: none;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
+      margin: 0; /* 移除可能的边距 */
+      padding: 0; /* 移除可能的内边距 */
       display: block; /* 确保iframe是块级元素 */
+      box-sizing: border-box;
+      border-radius: 0; /* 移除边框圆角 */
+      box-shadow: none; /* 移除阴影 */
+      position: relative; /* 设置相对定位 */
+      left: 0;
+      right: 0;
+      overflow: hidden; /* 防止溢出 */
     }
     
     .home-panel {
       display: block;
+      width: 100%;
     }
     
     /* 工具容器在有标签页时样式调整 */
@@ -571,6 +588,14 @@
     
     .has-tabs .tabs-container {
       display: block;
+      width: 100%;
+    }
+    
+    /* 标签内容容器宽度调整 */
+    .container.has-tabs {
+      width: 100%;
+      max-width: 100%;
+      padding: 0; /* 移除内边距确保内容填满 */
     }
     
     .category {
