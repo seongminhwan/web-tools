@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网络安全工具集</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4285F4; /* Google蓝 */
+      --primary-dark: #3367d6; /* 深蓝色，用于悬停状态 */
+      --secondary-color: #34A853; /* Google绿 */
+      --accent-color: #EA4335; /* Google红 */
+      --warning-color: #FBBC05; /* Google黄 */
+      --card-blue: #4361ee; /* 2FA蓝 */
+      --card-green: #06d6a0; /* 加密绿 */
+      --card-purple: #9d4edd; /* 解密紫 */
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --text-light: #666666;
+      --border-radius: 12px;
+      --shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      --card-shadow: 0 15px 25px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--accent-color);
+      border-radius: 2px;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      margin: 30px auto;
+      font-size: 1.2rem;
+      max-width: 700px;
+      line-height: 1.8;
+    }
+
+    /* 工具卡片容器 */
+    .tools-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .tool-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border-top: 5px solid var(--primary-color);
+    }
+
+    .tool-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .tool-card-encrypt {
+      border-top-color: var(--card-green);
+    }
+
+    .tool-card-decrypt {
+      border-top-color: var(--card-purple);
+    }
+
+    .tool-card-2fa {
+      border-top-color: var(--card-blue);
+    }
+
+    .tool-card-header {
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+      text-align: center;
+    }
+
+    .tool-card-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 15px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .tool-card-encrypt .tool-card-icon {
+      background: var(--card-green);
+    }
+
+    .tool-card-decrypt .tool-card-icon {
+      background: var(--card-purple);
+    }
+
+    .tool-card-2fa .tool-card-icon {
+      background: var(--card-blue);
+    }
+
+    .tool-card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 10px;
+    }
+
+    .tool-card-body {
+      padding: 0 20px 20px;
+      flex-grow: 1;
+    }
+
+    .tool-card-description {
+      color: var(--text-light);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .feature-list {
+      list-style-type: none;
+      margin-top: 15px;
+      margin-bottom: 25px;
+    }
+
+    .feature-list li {
+      position: relative;
+      padding-left: 25px;
+      margin-bottom: 10px;
+      color: var(--text-light);
+    }
+
+    .feature-list li:before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--secondary-color);
+      font-weight: bold;
+    }
+
+    .tool-card-footer {
+      padding: 20px;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    .btn {
+      padding: 14px 25px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-decoration: none;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-encrypt {
+      background: var(--card-green);
+    }
+
+    .btn-encrypt:hover {
+      background: #05a57c;
+    }
+
+    .btn-decrypt {
+      background: var(--card-purple);
+    }
+
+    .btn-decrypt:hover {
+      background: #8a29cc;
+    }
+
+    .btn-2fa {
+      background: var(--card-blue);
+    }
+
+    .btn-2fa:hover {
+      background: #2541e0;
+    }
+
+    /* 介绍部分 */
+    .intro-section {
+      background: var(--card-bg);
+      padding: 40px 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 50px;
+      text-align: center;
+    }
+
+    .intro-title {
+      font-size: 1.8rem;
+      color: var(--primary-color);
+      margin-bottom: 25px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .intro-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 2px;
+    }
+
+    .intro-features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .feature-item {
+      flex: 1;
+      min-width: 220px;
+      max-width: 300px;
+      text-align: center;
+      padding: 20px 15px;
+    }
+
+    .feature-icon {
+      font-size: 36px;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .feature-description {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding: 30px 20px;
+      color: var(--text-light);
+      background-color: rgba(0, 0, 0, 0.02);
+      font-size: 0.9rem;
+    }
+
+    .footer-links {
+      margin-bottom: 15px;
+    }
+
+    .footer-links a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin: 0 10px;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+        margin: 20px auto;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+      }
+
+      .tools-container {
+        grid-template-columns: 1fr;
+      }
+
+      .intro-features {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .feature-item {
+        max-width: 100%;
+      }
+    }
+
+    /* 暗色模式 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-light: #a0a0a0;
+        --shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        --card-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>网络安全工具集</h1>
+      <p class="subtitle">一站式解决您的网络安全需求，包括邮箱账号加密分享、2FA验证码生成等功能。所有操作均在本地完成，不会向服务器传输任何敏感数据，保障您的信息安全。</p>
+    </header>
+
+    <div class="intro-section">
+      <h2 class="intro-title">为什么选择我们的工具？</h2>
+      <div class="intro-features">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h3 class="feature-title">安全至上</h3>
+          <p class="feature-description">所有数据处理均在本地进行，不会上传任何敏感信息，确保您的数据安全</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3 class="feature-title">高效便捷</h3>
+          <p class="feature-description">清晰直观的界面设计，操作简单高效，满足您的各种安全需求</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h3 class="feature-title">专业可靠</h3>
+          <p class="feature-description">采用业界标准的加密算法，为您的数据提供可靠的安全保障</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tools-container">
+      <!-- 邮箱账号加密工具卡片 -->
+      <div class="tool-card tool-card-encrypt">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h2 class="tool-card-title">邮箱账号加密</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-description">安全地加密您的邮箱账号信息，生成分享链接，保护您的账号隐私。</p>
+          <ul class="feature-list">
+            <li>支持邮箱密码、恢复信息加密</li>
+            <li>支持二因素认证密钥分享</li>
+            <li>可添加Markdown格式备注</li>
+            <li>全程本地加密，无数据泄露风险</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <a href="email-share/encrypt.html" class="btn btn-encrypt">
+            <i class="fas fa-share-alt"></i> 去加密分享
+          </a>
+        </div>
+      </div>
+
+      <!-- 邮箱账号解密工具卡片 -->
+      <div class="tool-card tool-card-decrypt">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">
+            <i class="fas fa-unlock-alt"></i>
+          </div>
+          <h2 class="tool-card-title">邮箱账号解密</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-description">安全查看被加密的邮箱账号信息，一键复制所需数据，简单高效。</p>
+          <ul class="feature-list">
+            <li>实时显示TOTP验证码</li>
+            <li>一键复制账号、密码等信息</li>
+            <li>支持查看Markdown备注</li>
+            <li>提供二维码显示2FA信息</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <a href="email-share/decrypt.html" class="btn btn-decrypt">
+            <i class="fas fa-key"></i> 去解密查看
+          </a>
+        </div>
+      </div>
+
+      <!-- 2FA验证器工具卡片 -->
+      <div class="tool-card tool-card-2fa">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">
+            <i class="fas fa-qrcode"></i>
+          </div>
+          <h2 class="tool-card-title">2FA验证器</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-description">强大的二因素认证验证码生成工具，支持多账户管理，提升账号安全性。</p>
+          <ul class="feature-list">
+            <li>支持扫描二维码或手动输入</li>
+            <li>一键复制验证码</li>
+            <li>多账户管理与搜索</li>
+            <li>数据本地存储，不依赖网络</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <a href="2fa.html" class="btn btn-2fa">
+            <i class="fas fa-shield-alt"></i> 去生成验证码
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="email-share/encrypt.html">邮箱加密</a>
+      <a href="email-share/decrypt.html">邮箱解密</a>
+      <a href="2fa.html">2FA验证</a>
+    </div>
+    <p>&copy; 2025 网络安全工具集 | 安全 • 私密 • 便捷</p>
+  </footer>
+</body>
+</html>
