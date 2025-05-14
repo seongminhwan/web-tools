@@ -15,6 +15,7 @@
       --card-blue: #4361ee; /* 2FA蓝 */
       --card-green: #06d6a0; /* 加密绿 */
       --card-purple: #9d4edd; /* 解密紫 */
+      --card-orange: #ff9f1c; /* JSON橙 */
       --background-color: #f8f9fa;
       --card-bg: #ffffff;
       --text-color: #333333;
@@ -119,6 +120,10 @@
     .tool-card-2fa {
       border-top-color: var(--card-blue);
     }
+    
+    .tool-card-json {
+      border-top-color: var(--card-orange);
+    }
 
     .tool-card-header {
       padding: 20px;
@@ -150,6 +155,10 @@
 
     .tool-card-2fa .tool-card-icon {
       background: var(--card-blue);
+    }
+    
+    .tool-card-json .tool-card-icon {
+      background: var(--card-orange);
     }
 
     .tool-card-title {
@@ -242,6 +251,14 @@
 
     .btn-2fa:hover {
       background: #2541e0;
+    }
+    
+    .btn-json {
+      background: var(--card-orange);
+    }
+    
+    .btn-json:hover {
+      background: #e48a18;
     }
 
     /* 介绍部分 */
@@ -777,6 +794,20 @@
         <!-- 可添加更多验证工具 -->
       </ul>
     </div>
+    
+    <div class="category">
+      <div class="category-title">
+        <i class="fas fa-tools"></i> 实用工具
+      </div>
+      <ul class="tool-list">
+        <li class="tool-item" data-name="JSON格式化 美化 编辑 复制" data-url="json-formatter.html" data-icon="code">
+          <a href="javascript:void(0);">
+            <i class="fas fa-code"></i> JSON格式化工具
+          </a>
+        </li>
+        <!-- 可添加更多实用工具 -->
+      </ul>
+    </div>
   </div>
   <div class="container" id="mainContainer">
     <!-- 标签页容器 -->
@@ -895,6 +926,30 @@
           </a>
         </div>
       </div>
+      
+      <!-- JSON格式化工具卡片 -->
+      <div class="tool-card tool-card-json">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">
+            <i class="fas fa-code"></i>
+          </div>
+          <h2 class="tool-card-title">JSON格式化工具</h2>
+        </div>
+        <div class="tool-card-body">
+          <p class="tool-card-description">在线美化、格式化、编辑和复制JSON数据，提供直观高效的开发辅助工具。</p>
+          <ul class="feature-list">
+            <li>一键美化格式化JSON数据</li>
+            <li>支持语法高亮和自定义缩进</li>
+            <li>可直接编辑和复制格式化结果</li>
+            <li>提供JSON文件下载和示例数据</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <a href="json-formatter.html" class="btn btn-json">
+            <i class="fas fa-code"></i> 去格式化JSON
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -903,6 +958,7 @@
       <a href="email-share/encrypt.html">邮箱加密</a>
       <a href="email-share/decrypt.html">邮箱解密</a>
       <a href="2fa.html">2FA验证</a>
+      <a href="json-formatter.html">JSON格式化</a>
     </div>
     <p>&copy; 2025 网络安全工具集 | 安全 • 私密 • 便捷</p>
   </footer>
