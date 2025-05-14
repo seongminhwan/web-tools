@@ -454,6 +454,120 @@
       color: rgba(255,255,255,0.6);
     }
     
+    /* 标签页相关样式 */
+    .tabs-container {
+      position: relative;
+      margin-bottom: 30px;
+      display: none; /* 初始隐藏，有标签时显示 */
+    }
+    
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      position: relative;
+      padding-bottom: 1px;
+    }
+    
+    .tabs-header::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .tabs-header::-webkit-scrollbar-thumb {
+      background-color: var(--primary-color);
+      border-radius: 10px;
+    }
+    
+    .tab-item {
+      padding: 12px 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      background: transparent;
+      position: relative;
+      transition: var(--transition);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-light);
+      border-bottom: 3px solid transparent;
+      max-width: 250px;
+    }
+    
+    .tab-item.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .tab-item:hover:not(.active) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .tab-close {
+      margin-left: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      opacity: 0.6;
+      transition: var(--transition);
+    }
+    
+    .tab-close:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      opacity: 1;
+    }
+    
+    .tab-icon {
+      font-size: 16px;
+    }
+    
+    .tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+    
+    .tabs-content {
+      margin-top: 20px;
+    }
+    
+    .tab-panel {
+      display: none;
+      height: calc(100vh - 280px);
+      min-height: 500px;
+    }
+    
+    .tab-panel.active {
+      display: block;
+    }
+    
+    .tab-panel iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+    
+    .home-panel {
+      display: block;
+    }
+    
+    /* 工具容器在有标签页时样式调整 */
+    .has-tabs .home-content {
+      display: none;
+    }
+    
+    .has-tabs .tabs-container {
+      display: block;
+    }
+    
     .category {
       margin-bottom: 25px;
     }
@@ -465,6 +579,27 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+    
+    /* 返回首页按钮 */
+    .home-button {
+      margin-bottom: 20px;
+      padding: 10px 15px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+    
+    .home-button:hover {
+      background: rgba(255,255,255,0.2);
     }
     
     .tool-list {
@@ -544,13 +679,17 @@
       </div>
     </div>
     
+    <button class="home-button" id="homeButton">
+      <i class="fas fa-home"></i> 返回首页
+    </button>
+    
     <div class="category">
       <div class="category-title">
         <i class="fas fa-lock"></i> 加密工具
       </div>
       <ul class="tool-list">
-        <li class="tool-item" data-name="邮箱账号加密 加密 分享">
-          <a href="email-share/encrypt.html">
+        <li class="tool-item" data-name="邮箱账号加密 加密 分享" data-url="email-share/encrypt.html" data-icon="share-alt">
+          <a href="javascript:void(0);">
             <i class="fas fa-share-alt"></i> 邮箱账号加密
           </a>
         </li>
@@ -563,8 +702,8 @@
         <i class="fas fa-unlock-alt"></i> 解密工具
       </div>
       <ul class="tool-list">
-        <li class="tool-item" data-name="邮箱账号解密 解密 查看">
-          <a href="email-share/decrypt.html">
+        <li class="tool-item" data-name="邮箱账号解密 解密 查看" data-url="email-share/decrypt.html" data-icon="key">
+          <a href="javascript:void(0);">
             <i class="fas fa-key"></i> 邮箱账号解密
           </a>
         </li>
@@ -577,8 +716,8 @@
         <i class="fas fa-shield-alt"></i> 验证工具
       </div>
       <ul class="tool-list">
-        <li class="tool-item" data-name="2FA 二因素认证 验证码 TOTP">
-          <a href="2fa.html">
+        <li class="tool-item" data-name="2FA 二因素认证 验证码 TOTP" data-url="2fa.html" data-icon="qrcode">
+          <a href="javascript:void(0);">
             <i class="fas fa-qrcode"></i> 2FA验证器
           </a>
         </li>
@@ -587,7 +726,19 @@
     </div>
   </div>
   <div class="container" id="mainContainer">
-    <header>
+    <!-- 标签页容器 -->
+    <div class="tabs-container" id="tabsContainer">
+      <div class="tabs-header" id="tabsHeader">
+        <!-- 标签页标题区域 - 由JS动态生成 -->
+      </div>
+      <div class="tabs-content" id="tabsContent">
+        <!-- 标签页内容区域 - 由JS动态生成 -->
+      </div>
+    </div>
+    
+    <!-- 首页内容 -->
+    <div class="home-content" id="homeContent">
+    <header id="homeHeader">
       <h1>网络安全工具集</h1>
       <p class="subtitle">一站式解决您的网络安全需求，包括邮箱账号加密分享、2FA验证码生成等功能。所有操作均在本地完成，不会向服务器传输任何敏感数据，保障您的信息安全。</p>
     </header>
@@ -704,16 +855,176 @@
   </footer>
   
   <script>
-    // 侧边栏切换
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
+    // 全局变量
     const mainContainer = document.getElementById('mainContainer');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const homeContent = document.getElementById('homeContent');
+    const tabsContainer = document.getElementById('tabsContainer');
+    const tabsHeader = document.getElementById('tabsHeader');
+    const tabsContent = document.getElementById('tabsContent');
+    const homeButton = document.getElementById('homeButton');
     
-    sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      mainContainer.classList.toggle('sidebar-open');
-      sidebarToggle.classList.toggle('active');
-    });
+    // 追踪打开的标签页
+    let tabCounter = 0;
+    let activeTabs = [];
+    let currentActiveTab = null;
+    
+    // 初始化
+    function init() {
+      // 侧边栏切换
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        mainContainer.classList.toggle('sidebar-open');
+        sidebarToggle.classList.toggle('active');
+      });
+      
+      // 返回首页按钮点击事件
+      homeButton.addEventListener('click', showHome);
+      
+      // 设置工具项点击事件
+      document.querySelectorAll('.tool-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const url = item.getAttribute('data-url');
+          const title = item.querySelector('a').innerText.trim();
+          const icon = item.getAttribute('data-icon') || 'link';
+          openToolInTab(url, title, icon);
+          
+          // 如果在移动设备上，点击后关闭侧边栏
+          if (window.innerWidth < 768) {
+            sidebar.classList.remove('open');
+            mainContainer.classList.remove('sidebar-open');
+          }
+        });
+      });
+    }
+    
+    // 显示首页内容
+    function showHome() {
+      homeContent.style.display = 'block';
+      tabsContainer.style.display = 'none';
+      mainContainer.classList.remove('has-tabs');
+      currentActiveTab = null;
+      
+      // 关闭侧边栏（在移动设备上）
+      if (window.innerWidth < 768) {
+        sidebar.classList.remove('open');
+        mainContainer.classList.remove('sidebar-open');
+      }
+    }
+    
+    // 在标签页中打开工具
+    function openToolInTab(url, title, iconName) {
+      // 检查是否已存在相同URL的标签
+      const existingTabIndex = activeTabs.findIndex(tab => tab.url === url);
+      
+      if (existingTabIndex !== -1) {
+        // 如果标签已存在，激活它
+        activateTab(existingTabIndex);
+      } else {
+        // 创建新标签
+        const tabId = `tab-${tabCounter++}`;
+        const tabData = { id: tabId, url, title, iconName };
+        
+        // 添加标签头
+        const tabHeader = document.createElement('div');
+        tabHeader.className = 'tab-item';
+        tabHeader.setAttribute('data-tab-id', tabId);
+        tabHeader.innerHTML = `
+          <span class="tab-icon"><i class="fas fa-${iconName}"></i></span>
+          <span class="tab-title">${title}</span>
+          <span class="tab-close"><i class="fas fa-times"></i></span>
+        `;
+        tabsHeader.appendChild(tabHeader);
+        
+        // 添加标签内容
+        const tabPanel = document.createElement('div');
+        tabPanel.className = 'tab-panel';
+        tabPanel.id = tabId;
+        tabPanel.innerHTML = `<iframe src="${url}" loading="lazy"></iframe>`;
+        tabsContent.appendChild(tabPanel);
+        
+        // 存储标签数据
+        activeTabs.push(tabData);
+        
+        // 绑定事件
+        tabHeader.addEventListener('click', (e) => {
+          if (e.target.closest('.tab-close')) {
+            // 点击了关闭按钮
+            e.stopPropagation();
+            closeTab(activeTabs.findIndex(tab => tab.id === tabId));
+          } else {
+            // 点击了标签项
+            activateTab(activeTabs.findIndex(tab => tab.id === tabId));
+          }
+        });
+        
+        // 激活新标签
+        activateTab(activeTabs.length - 1);
+      }
+      
+      // 显示标签容器，隐藏首页内容
+      homeContent.style.display = 'none';
+      tabsContainer.style.display = 'block';
+      mainContainer.classList.add('has-tabs');
+    }
+    
+    // 激活特定标签
+    function activateTab(index) {
+      if (index < 0 || index >= activeTabs.length) return;
+      
+      // 清除所有活动标签样式
+      document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      
+      // 设置活动标签
+      const tabData = activeTabs[index];
+      const tabHeader = document.querySelector(`.tab-item[data-tab-id="${tabData.id}"]`);
+      const tabPanel = document.getElementById(tabData.id);
+      
+      tabHeader.classList.add('active');
+      tabPanel.classList.add('active');
+      currentActiveTab = index;
+      
+      // 确保标签头在可视区域内
+      tabHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+    
+    // 关闭标签
+    function closeTab(index) {
+      if (index < 0 || index >= activeTabs.length) return;
+      
+      const tabData = activeTabs[index];
+      const tabHeader = document.querySelector(`.tab-item[data-tab-id="${tabData.id}"]`);
+      const tabPanel = document.getElementById(tabData.id);
+      
+      // 移除DOM元素
+      tabHeader.remove();
+      tabPanel.remove();
+      
+      // 从活动标签列表中移除
+      activeTabs.splice(index, 1);
+      
+      // 如果没有标签了，显示首页
+      if (activeTabs.length === 0) {
+        showHome();
+        return;
+      }
+      
+      // 如果关闭的是当前活动标签，激活最近的标签
+      if (currentActiveTab === index) {
+        const newIndex = index < activeTabs.length ? index : activeTabs.length - 1;
+        activateTab(newIndex);
+      } else if (currentActiveTab > index) {
+        // 调整当前标签索引
+        currentActiveTab--;
+      }
+    }
     
     // 工具搜索过滤功能
     function filterTools() {
@@ -742,16 +1053,10 @@
           category.style.display = 'none';
         }
       });
-      
-      // 如果没有结果，显示提示信息
-      if (!hasResults && filter) {
-        // 可以添加一个无结果提示元素
-      }
     }
     
     // 点击页面其他区域关闭侧边栏
     document.addEventListener('click', (event) => {
-      // 如果点击的不是侧边栏内部元素，也不是切换按钮，则关闭侧边栏
       if (!sidebar.contains(event.target) && 
           event.target !== sidebarToggle && 
           !sidebarToggle.contains(event.target) && 
@@ -760,6 +1065,9 @@
         mainContainer.classList.remove('sidebar-open');
       }
     });
+    
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
