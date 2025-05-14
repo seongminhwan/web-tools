@@ -1435,12 +1435,15 @@
       showToast('备注已保存');
     });
     
-    // 确保模态框只能通过关闭按钮关闭，点击其他区域不会自动关闭
+    // 确保模态框只能通过关闭按钮关闭，点击其他区域不会关闭
     window.addEventListener('click', (event) => {
-      // 点击的是模态框背景但不是模态框内容时不要关闭
+      // 点击的是模态框背景时阻止关闭
       if (event.target === notesModal) {
-        // 什么也不做，阻止默认的关闭行为
-        return;
+        // 阻止默认关闭行为
+        event.preventDefault();
+        event.stopPropagation();
+        // 不关闭模态框，保持打开状态
+        return false;
       }
     });
     
