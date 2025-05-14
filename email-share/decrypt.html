@@ -1084,8 +1084,20 @@
         }, 300);
       }
       
-      // 设置页面标题
+    // 设置页面标题
       document.title = '邮箱账号信息查看';
+    });
+    
+    // 确保模态框只能通过关闭按钮关闭，点击其他区域不会关闭
+    window.addEventListener('click', (event) => {
+      // 点击的是模态框背景时阻止关闭
+      if (event.target === notesModal) {
+        // 阻止默认关闭行为
+        event.preventDefault();
+        event.stopPropagation();
+        // 不关闭模态框，保持打开状态
+        return false;
+      }
     });
   </script>
 </body>
