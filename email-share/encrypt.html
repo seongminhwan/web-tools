@@ -774,6 +774,7 @@
               </div>
               <p class="help-text" style="font-size: 12px; margin-top: 5px; color: var(--text-light);">
                 支持解析标准格式的TOTP URI，例如：otpauth://totp/Google%3Aarethai5c5j45%40gmail.com?secret=...
+                <br>也支持简短格式：totp/Google%3Aenriquetaqjacg26%40gmail.com?secret=t7simi3mjjwp4fr24xpxo4dz5nzk7v2a&issuer=Google
               </p>
             </div>
 
@@ -1046,14 +1047,21 @@
       }
       
       try {
-        // 检查URI格式
-        if (!uri.startsWith('otpauth://totp/')) {
+        let standardUri = uri;
+        
+        // 检查URI格式，支持两种格式：
+        // 1. 标准格式: otpauth://totp/...
+        // 2. 简短格式: totp/...
+        if (uri.startsWith('totp/')) {
+          // 转换简短格式为标准格式
+          standardUri = 'otpauth://' + uri;
+        } else if (!uri.startsWith('otpauth://totp/')) {
           showToast('无效的TOTP URI格式', 'error');
           return;
         }
         
         // 解析URI
-        const url = new URL(uri);
+        const url = new URL(standardUri);
         
         // 提取账号信息
         let account = decodeURIComponent(url.pathname.substring(6)); // 移除 /totp/
