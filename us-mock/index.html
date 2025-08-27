@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国地址生成工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- 顶部工具栏 -->
+        <header class="toolbar">
+            <h1><i class="fas fa-map-marker-alt"></i> 美国地址生成工具</h1>
+            <div class="toolbar-buttons">
+                <button class="btn btn-secondary" id="layoutToggle">
+                    <i class="fas fa-exchange-alt"></i> 切换布局
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab 导航 -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="tab1">数据组 1</button>
+                <button class="tab-btn" data-tab="tab2">数据组 2</button>
+                <button class="tab-btn" data-tab="tab3">数据组 3</button>
+                <button class="tab-btn add-tab" id="addTab">
+                    <i class="fas fa-plus"></i> 新增
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 内容区域 -->
+        <div class="tab-content" id="tabContent">
+            <!-- Tab 1 内容 -->
+            <div class="tab-panel active" id="tab1">
+                <!-- Tab内操作按钮 -->
+                <div class="tab-actions">
+                    <button class="btn btn-primary" id="generateAll-tab1">
+                        <i class="fas fa-magic"></i> 生成全部
+                    </button>
+                    <button class="btn btn-success" id="copyAll-tab1">
+                        <i class="fas fa-copy"></i> 复制全部JSON
+                    </button>
+                    <button class="btn btn-danger" id="clearAll-tab1">
+                        <i class="fas fa-trash"></i> 清空
+                    </button>
+                </div>
+
+                <main class="main-content horizontal" id="mainContent-tab1">
+                    <!-- 地址生成面板 -->
+                    <div class="panel address-panel">
+                        <div class="panel-header">
+                            <h2><i class="fas fa-home"></i> 地址生成</h2>
+                        </div>
+
+                        <!-- 折叠控制面板 -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="address-controls-tab1">
+                                <span><i class="fas fa-cog"></i> 生成选项</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="collapsible-content" id="address-controls-tab1">
+                                <div class="form-group">
+                                    <label for="stateSelect-tab1">选择州 (可选):</label>
+                                    <select id="stateSelect-tab1" class="form-select">
+                                        <option value="">随机选择...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="citySelect-tab1">选择城市 (可选):</label>
+                                    <select id="citySelect-tab1" class="form-select">
+                                        <option value="">随机选择...</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary btn-generate" id="generateAddress-tab1">
+                                    <i class="fas fa-dice"></i> 生成地址
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel-content">
+                            <div class="info-card" id="addressCard-tab1">
+                                <div class="card-header">
+                                    <h3>生成的地址</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-item">
+                                        <label>街道1:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="street1-tab1">-</span>
+                                            <button class="copy-btn" data-field="street1" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>街道2:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="street2-tab1">-</span>
+                                            <button class="copy-btn" data-field="street2" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>城市:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="city-tab1">-</span>
+                                            <button class="copy-btn" data-field="city" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>州:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="state-tab1">-</span>
+                                            <button class="copy-btn" data-field="state" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>邮编:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="zipCode-tab1">-</span>
+                                            <button class="copy-btn" data-field="zipCode" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-outline btn-json" id="copyAddressJson-tab1">
+                                        <i class="fas fa-code"></i> 复制地址JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户信息面板 -->
+                    <div class="panel user-panel">
+                        <div class="panel-header">
+                            <h2><i class="fas fa-user"></i> 用户信息</h2>
+                        </div>
+
+                        <!-- 折叠控制面板 -->
+                        <div class="collapsible-section">
+                            <button class="collapsible-header" data-target="user-controls-tab1">
+                                <span><i class="fas fa-cog"></i> 生成选项</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="collapsible-content" id="user-controls-tab1">
+                                <div class="form-group">
+                                    <label for="genderPrefer-tab1">性别偏好:</label>
+                                    <select id="genderPrefer-tab1" class="form-select">
+                                        <option value="random">随机</option>
+                                        <option value="Male">男性</option>
+                                        <option value="Female">女性</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ageRange-tab1">年龄范围:</label>
+                                    <select id="ageRange-tab1" class="form-select">
+                                        <option value="18-30">18-30岁</option>
+                                        <option value="30-50">30-50岁</option>
+                                        <option value="50-80">50-80岁</option>
+                                        <option value="18-80">18-80岁</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nameStyle-tab1">姓名风格:</label>
+                                    <select id="nameStyle-tab1" class="form-select">
+                                        <option value="simple">简单姓名</option>
+                                        <option value="compound">复合姓名</option>
+                                        <option value="mixed">混合风格</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary btn-generate" id="generateUser-tab1">
+                                    <i class="fas fa-dice"></i> 生成用户
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel-content">
+                            <div class="info-card" id="userCard-tab1">
+                                <div class="card-header">
+                                    <h3>生成的用户信息</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-item">
+                                        <label>名:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="firstName-tab1">-</span>
+                                            <button class="copy-btn" data-field="firstName" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>姓:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="lastName-tab1">-</span>
+                                            <button class="copy-btn" data-field="lastName" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>出生年:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="birthYear-tab1">-</span>
+                                            <button class="copy-btn" data-field="birthYear" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>出生月:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="birthMonth-tab1">-</span>
+                                            <button class="copy-btn" data-field="birthMonth" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>出生日:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="birthDay-tab1">-</span>
+                                            <button class="copy-btn" data-field="birthDay" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>性别:</label>
+                                        <div class="value-container">
+                                            <span class="value" id="gender-tab1">-</span>
+                                            <button class="copy-btn" data-field="gender" data-tab="tab1" title="复制">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-outline btn-json" id="copyUserJson-tab1">
+                                        <i class="fas fa-code"></i> 复制用户JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Tab 2 内容 -->
+            <div class="tab-panel" id="tab2">
+                <!-- 这里将通过JavaScript动态创建相同的结构 -->
+            </div>
+
+            <!-- Tab 3 内容 -->
+            <div class="tab-panel" id="tab3">
+                <!-- 这里将通过JavaScript动态创建相同的结构 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">复制成功!</span>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
