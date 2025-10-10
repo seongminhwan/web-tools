@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国数据生成器</title>
+    <script src="https://cdn.jsdelivr.net/npm/faker@5.5.3/dist/faker.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: #4f46e5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .location-icon {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 300px;
+            gap: 0;
+        }
+
+        .left-column {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0;
+        }
+
+        .right-column {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0;
+        }
+
+        .section {
+            padding: 30px;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .section-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .data-item:hover {
+            background: #f9fafb;
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-size: 14px;
+            color: #6b7280;
+            min-width: 80px;
+        }
+
+        .data-value {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-value:hover {
+            background: #f3f4f6;
+        }
+
+        .copy-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .data-value:hover .copy-icon {
+            opacity: 1;
+        }
+
+        .sidebar {
+            background: #f9fafb;
+            padding: 30px 20px;
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .quick-actions {
+            margin-bottom: 30px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #16a34a;
+        }
+
+        .btn-secondary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4f46e5;
+        }
+
+        .btn-tertiary {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-tertiary:hover {
+            background: #7c3aed;
+        }
+
+        .filters {
+            margin-top: 20px;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .city-dropdown {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .city-dropdown.show {
+            display: block;
+        }
+
+        .city-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .city-item:hover {
+            background: #f3f4f6;
+        }
+
+        .city-icon {
+            width: 16px;
+            height: 16px;
+            color: #6b7280;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #22c55e;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+            
+            .left-column, .right-column {
+                grid-template-rows: auto;
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 20px;
+            }
+            
+            .data-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .data-value {
+                align-self: stretch;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>美国数据生成器</h1>
+            <div class="location-icon">📍</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <!-- 基本信息 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-icon">👤</span>
+                        <span>基本信息</span>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">姓名:</span>
+                        <div class="data-value">
+                            <span id="fullName">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">性别:</span>
+                        <div class="data-value">
+                            <span id="gender">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">生日:</span>
+                        <div class="data-value">
+                            <span id="birthday">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">称呼:</span>
+                        <div class="data-value">
+                            <span id="prefix">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">头发颜色:</span>
+                        <div class="data-value">
+                            <span id="hairColor">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 就业信息 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-icon">💼</span>
+                        <span>就业信息</span>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">职业:</span>
+                        <div class="data-value">
+                            <span id="jobTitle">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">公司:</span>
+                        <div class="data-value">
+                            <span id="company">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">行业:</span>
+                        <div class="data-value">
+                            <span id="industry">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">公司规模:</span>
+                        <div class="data-value">
+                            <span id="companySize">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">就业状态:</span>
+                        <div class="data-value">
+                            <span id="employmentStatus">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">薪资:</span>
+                        <div class="data-value">
+                            <span id="salary">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">SSN:</span>
+                        <div class="data-value">
+                            <span id="ssn">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <!-- 地址信息 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-icon">🏠</span>
+                        <span>地址信息</span>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">国家:</span>
+                        <div class="data-value">
+                            <span id="country">United States</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">街道:</span>
+                        <div class="data-value">
+                            <span id="streetAddress">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">城市:</span>
+                        <div class="data-value">
+                            <span id="city">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">州:</span>
+                        <div class="data-value">
+                            <span id="state">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">州全称:</span>
+                        <div class="data-value">
+                            <span id="stateFull">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">邮编:</span>
+                        <div class="data-value">
+                            <span id="zipCode">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">电话:</span>
+                        <div class="data-value">
+                            <span id="phone">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">邮箱:</span>
+                        <div class="data-value">
+                            <span id="email">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 信用卡信息 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-icon">💳</span>
+                        <span>信用卡信息</span>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">卡片类型:</span>
+                        <div class="data-value">
+                            <span id="cardType">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">卡号:</span>
+                        <div class="data-value">
+                            <span id="cardNumber">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">CVV:</span>
+                        <div class="data-value">
+                            <span id="cvv">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">有效期:</span>
+                        <div class="data-value">
+                            <span id="expiry">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <div class="quick-actions">
+                    <h3 style="margin-bottom: 15px; color: #374151; font-size: 16px;">快速操作</h3>
+                    <button class="action-button btn-primary" onclick="copyAllData()">
+                        📋 复制全部信息
+                    </button>
+                    <button class="action-button btn-secondary" onclick="generateAllData()">
+                        🔄 重新生成
+                    </button>
+                    <button class="action-button btn-tertiary" onclick="exportJSON()">
+                        📥 导出JSON
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <h3 style="margin-bottom: 15px; color: #374151; font-size: 16px;">筛选选项</h3>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">选择州</label>
+                        <select class="filter-select" id="stateFilter" onchange="updateCityOptions()">
+                            <option value="">--- 随机州 ---</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">选择城市</label>
+                        <select class="filter-select" id="cityFilter">
+                            <option value="">--- 随机城市 ---</option>
+                        </select>
+                    </div>
+
+                    <button class="action-button btn-secondary" onclick="generateAllData()" style="margin-top: 15px;">
+                        🔄 重新生成
+                    </button>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 10px; color: #374151; font-size: 14px; cursor: pointer;" onclick="toggleCityDropdown()">
+                        📍 热门城市 <span style="float: right;">▼</span>
+                    </h4>
+                    <div class="city-dropdown" id="cityDropdown">
+                        <div class="city-item" onclick="selectCity('New York', 'NY')">
+                            <span class="city-icon">🌆</span>
+                            <span>纽约</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Los Angeles', 'CA')">
+                            <span class="city-icon">🌴</span>
+                            <span>洛杉矶</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Chicago', 'IL')">
+                            <span class="city-icon">🏙️</span>
+                            <span>芝加哥</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Houston', 'TX')">
+                            <span class="city-icon">🛢️</span>
+                            <span>休斯敦</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Phoenix', 'AZ')">
+                            <span class="city-icon">🌵</span>
+                            <span>凤凰城</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Philadelphia', 'PA')">
+                            <span class="city-icon">🔔</span>
+                            <span>费城</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('San Antonio', 'TX')">
+                            <span class="city-icon">🤠</span>
+                            <span>圣安东尼奥</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('San Diego', 'CA')">
+                            <span class="city-icon">🏖️</span>
+                            <span>圣地亚哥</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('Dallas', 'TX')">
+                            <span class="city-icon">🏢</span>
+                            <span>达拉斯</span>
+                        </div>
+                        <div class="city-item" onclick="selectCity('San Jose', 'CA')">
+                            <span class="city-icon">💻</span>
+                            <span>圣何塞</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">复制成功！</div>
+
+    <script>
+        // 设置Faker为英语（美国）
+        faker.locale = 'en_US';
+
+        // 美国州数据
+        const US_STATES = {
+            'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+            'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+            'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+            'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+            'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+            'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+            'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+            'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+            'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+            'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+        };
+
+        // 真实的城市-邮编数据库（基于真实数据）
+        const REAL_ADDRESSES = {
+            'NY': {
+                'New York': {
+                    zipCodes: ['10001', '10002', '10003', '10009', '10010', '10011', '10012', '10013', '10014', '10016', '10017', '10018', '10019', '10020', '10021', '10022', '10023', '10024', '10025', '10026', '10027', '10028', '10029', '10030'],
+                    realStreets: ['Broadway', 'Fifth Avenue', 'Park Avenue', 'Madison Avenue', 'Lexington Avenue', 'Third Avenue', 'Second Avenue', 'First Avenue', 'Avenue A', 'Avenue B', 'West 23rd Street', 'East 14th Street', 'Wall Street', 'Canal Street', 'Houston Street', 'Bleecker Street', 'Spring Street', 'Prince Street', 'Grand Street', 'Delancey Street']
+                },
+                'Buffalo': {
+                    zipCodes: ['14201', '14202', '14203', '14204', '14206', '14207', '14208', '14209', '14210', '14211', '14212', '14213', '14214', '14215', '14216', '14217', '14218', '14219', '14220', '14221'],
+                    realStreets: ['Main Street', 'Elmwood Avenue', 'Delaware Avenue', 'Hertel Avenue', 'West Ferry Street', 'East Ferry Street', 'Forest Avenue', 'Grant Street', 'Lafayette Avenue', 'Niagara Street', 'Bailey Avenue', 'Genesee Street', 'William Street', 'Pearl Street', 'Church Street']
+                }
+            },
+            'CA': {
+                'Los Angeles': {
+                    zipCodes: ['90001', '90002', '90003', '90004', '90005', '90006', '90007', '90008', '90010', '90011', '90012', '90013', '90014', '90015', '90016', '90017', '90018', '90019', '90020', '90021', '90022', '90023', '90024', '90025'],
+                    realStreets: ['Sunset Boulevard', 'Hollywood Boulevard', 'Wilshire Boulevard', 'Santa Monica Boulevard', 'Melrose Avenue', 'Beverly Boulevard', 'Pico Boulevard', 'Olympic Boulevard', 'Venice Boulevard', 'Washington Boulevard', 'Adams Boulevard', 'Jefferson Boulevard', 'Exposition Boulevard', 'Martin Luther King Jr Boulevard', 'Slauson Avenue']
+                },
+                'San Francisco': {
+                    zipCodes: ['94102', '94103', '94104', '94105', '94107', '94108', '94109', '94110', '94111', '94112', '94114', '94115', '94116', '94117', '94118', '94121', '94122', '94123', '94124', '94127'],
+                    realStreets: ['Market Street', 'Mission Street', 'Van Ness Avenue', 'Geary Boulevard', 'Powell Street', 'Montgomery Street', 'California Street', 'Pine Street', 'Bush Street', 'Sutter Street', 'Post Street', 'Grant Avenue', 'Stockton Street', 'Kearny Street', 'Columbus Avenue']
+                }
+            },
+            'TX': {
+                'Houston': {
+                    zipCodes: ['77001', '77002', '77003', '77004', '77005', '77006', '77007', '77008', '77009', '77010', '77011', '77012', '77013', '77014', '77015', '77016', '77017', '77018', '77019', '77020'],
+                    realStreets: ['Main Street', 'Texas Avenue', 'Louisiana Street', 'Smith Street', 'Travis Street', 'Milam Street', 'San Jacinto Street', 'Fannin Street', 'Austin Street', 'Caroline Street', 'Chenevert Street', 'Hamilton Street', 'Hutchins Street', 'Jackson Street', 'Jefferson Street']
+                },
+                'Dallas': {
+                    zipCodes: ['75201', '75202', '75203', '75204', '75205', '75206', '75207', '75208', '75209', '75210', '75211', '75212', '75214', '75215', '75216', '75217', '75218', '75219', '75220', '75223'],
+                    realStreets: ['Main Street', 'Elm Street', 'Commerce Street', 'Jackson Street', 'Wood Street', 'Young Street', 'Ervay Street', 'St. Paul Street', 'Harwood Street', 'Live Oak Street', 'Pearl Street', 'Bryan Street', 'McKinney Avenue', 'Ross Avenue', 'Canton Street']
+                }
+            },
+            'FL': {
+                'Miami': {
+                    zipCodes: ['33101', '33102', '33109', '33111', '33112', '33114', '33116', '33119', '33122', '33124', '33125', '33126', '33127', '33128', '33129', '33130', '33131', '33132', '33133', '33134'],
+                    realStreets: ['Biscayne Boulevard', 'Collins Avenue', 'Ocean Drive', 'Washington Avenue', 'Lincoln Road', 'Alton Road', 'Indian Creek Drive', 'Bay Road', 'Meridian Avenue', 'Pennsylvania Avenue', 'Euclid Avenue', 'Jefferson Avenue', 'Michigan Avenue', 'Lenox Avenue', 'Sheridan Avenue']
+                }
+            },
+            'IL': {
+                'Chicago': {
+                    zipCodes: ['60601', '60602', '60603', '60604', '60605', '60606', '60607', '60608', '60609', '60610', '60611', '60612', '60613', '60614', '60615', '60616', '60617', '60618', '60619', '60620'],
+                    realStreets: ['Michigan Avenue', 'State Street', 'Wabash Avenue', 'Wells Street', 'LaSalle Street', 'Clark Street', 'Dearborn Street', 'Franklin Street', 'Canal Street', 'Jefferson Street', 'Des Plaines Street', 'Halsted Street', 'Green Street', 'Peoria Street', 'Morgan Street']
+                }
+            }
+        };
+
+        // 常见的真实街道名称（用于未在数据库中的城市）
+        const REAL_STREET_NAMES = [
+            'Main Street', 'First Street', 'Second Street', 'Third Street', 'Fourth Street', 'Fifth Street',
+            'Park Avenue', 'Oak Street', 'Pine Street', 'Maple Street', 'Cedar Street', 'Elm Street',
+            'Washington Street', 'Lincoln Avenue', 'Jefferson Street', 'Madison Avenue', 'Monroe Street',
+            'Adams Street', 'Jackson Street', 'Harrison Street', 'Tyler Street', 'Taylor Street',
+            'Church Street', 'School Street', 'Mill Street', 'Water Street', 'High Street', 'Hill Street',
+            'Spring Street', 'Valley Road', 'Ridge Road', 'Sunset Drive', 'Sunrise Avenue', 'Garden Street',
+            'Forest Avenue', 'Lake Street', 'River Road', 'Creek Drive', 'Meadow Lane', 'Grove Street'
+        ];
+
+        // 州-城市映射（扩展版）
+        const STATE_CITIES = {
+            'NY': ['New York', 'Buffalo', 'Rochester', 'Yonkers', 'Syracuse', 'Albany', 'New Rochelle', 'Mount Vernon', 'Schenectady', 'Utica'],
+            'CA': ['Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento', 'Long Beach', 'Oakland', 'Bakersfield', 'Anaheim'],
+            'TX': ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso', 'Arlington', 'Corpus Christi', 'Plano', 'Laredo'],
+            'FL': ['Jacksonville', 'Miami', 'Tampa', 'Orlando', 'St. Petersburg', 'Hialeah', 'Tallahassee', 'Fort Lauderdale', 'Port St. Lucie', 'Cape Coral'],
+            'IL': ['Chicago', 'Aurora', 'Rockford', 'Joliet', 'Naperville', 'Springfield', 'Peoria', 'Elgin', 'Waukegan', 'Cicero'],
+            'PA': ['Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading', 'Scranton', 'Bethlehem', 'Lancaster', 'Harrisburg', 'Altoona'],
+            'OH': ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton', 'Youngstown', 'Parma', 'Canton', 'Lorain'],
+            'GA': ['Atlanta', 'Augusta', 'Columbus', 'Macon', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Albany', 'Marietta'],
+            'NC': ['Charlotte', 'Raleigh', 'Greensboro', 'Durham', 'Winston-Salem', 'Fayetteville', 'Cary', 'Wilmington', 'High Point', 'Asheville'],
+            'MI': ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Lansing', 'Ann Arbor', 'Flint', 'Dearborn', 'Livonia', 'Westland']
+        };
+
+        // 生成真实地址的函数
+        function generateRealAddress(selectedState, selectedCity) {
+            let state, city, zipCode, streetName;
+            
+            if (selectedState && selectedCity) {
+                state = selectedState;
+                city = selectedCity;
+            } else if (selectedState) {
+                state = selectedState;
+                const cities = STATE_CITIES[state] || ['Unknown City'];
+                city = cities[Math.floor(Math.random() * cities.length)];
+            } else {
+                const states = Object.keys(STATE_CITIES);
+                state = states[Math.floor(Math.random() * states.length)];
+                const cities = STATE_CITIES[state];
+                city = cities[Math.floor(Math.random() * cities.length)];
+            }
+
+            // 尝试获取真实地址数据
+            if (REAL_ADDRESSES[state] && REAL_ADDRESSES[state][city]) {
+                const cityData = REAL_ADDRESSES[state][city];
+                zipCode = cityData.zipCodes[Math.floor(Math.random() * cityData.zipCodes.length)];
+                streetName = cityData.realStreets[Math.floor(Math.random() * cityData.realStreets.length)];
+            } else {
+                // 使用通用真实街道名称和模拟邮编
+                streetName = REAL_STREET_NAMES[Math.floor(Math.random() * REAL_STREET_NAMES.length)];
+                // 生成符合该州格式的邮编
+                zipCode = generateStateZipCode(state);
+            }
+
+            const streetNumber = Math.floor(Math.random() * 9999) + 1;
+            const streetAddress = `${streetNumber} ${streetName}`;
+
+            return {
+                streetAddress,
+                city,
+                state,
+                stateFull: US_STATES[state],
+                zipCode
+            };
+        }
+
+        // 为不同州生成符合格式的邮编
+        function generateStateZipCode(state) {
+            const stateZipRanges = {
+                'NY': () => `1${Math.floor(Math.random() * 5)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'CA': () => `9${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'TX': () => `7${Math.floor(Math.random() * 9)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'FL': () => `3${Math.floor(Math.random() * 4)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'IL': () => `6${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+            };
+            
+            return stateZipRanges[state] ? stateZipRanges[state]() : `${Math.floor(Math.random() * 90000) + 10000}`;
+        }
+
+        let currentData = {};
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStateFilter();
+            generateAllData();
+        });
+
+        // 初始化州选择器
+        function initializeStateFilter() {
+            const stateFilter = document.getElementById('stateFilter');
+            Object.entries(US_STATES).forEach(([code, name]) => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = name;
+                stateFilter.appendChild(option);
+            });
+        }
+
+        // 更新城市选项
+        function updateCityOptions() {
+            const stateCode = document.getElementById('stateFilter').value;
+            const cityFilter = document.getElementById('cityFilter');
+            
+            cityFilter.innerHTML = '<option value="">--- 随机城市 ---</option>';
+            
+            if (stateCode && STATE_CITIES[stateCode]) {
+                STATE_CITIES[stateCode].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    cityFilter.appendChild(option);
+                });
+            }
+        }
+
+        // 生成所有数据
+        function generateAllData() {
+            const selectedState = document.getElementById('stateFilter').value;
+            const selectedCity = document.getElementById('cityFilter').value;
+
+            // 生成真实地址
+            const realAddress = generateRealAddress(selectedState, selectedCity);
+
+            currentData = {
+                // 基本信息
+                firstName: faker.name.firstName(),
+                lastName: faker.name.lastName(),
+                gender: faker.random.arrayElement(['Male', 'Female']),
+                birthday: faker.date.between('1950-01-01', '2000-12-31').toLocaleDateString('en-US', {
+                    month: 'numeric',
+                    day: 'numeric', 
+                    year: 'numeric'
+                }),
+                prefix: faker.name.prefix(),
+                hairColor: faker.random.arrayElement(['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White']),
+
+                // 地址信息（使用真实数据）
+                streetAddress: realAddress.streetAddress,
+                city: realAddress.city,
+                state: realAddress.state,
+                stateFull: realAddress.stateFull,
+                zipCode: realAddress.zipCode,
+                phone: faker.phone.phoneNumber('(###) ###-####'),
+                email: '',
+
+                // 就业信息
+                jobTitle: faker.name.jobTitle(),
+                company: faker.company.companyName().replace(/[^\w\s]/gi, ''),
+                industry: faker.random.arrayElement(['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Sports', 'Entertainment', 'Real Estate', 'Consulting']),
+                companySize: faker.random.arrayElement(['1-10', '11-50', '51-100', '101-500', '501-1000', '1000+']),
+                employmentStatus: faker.random.arrayElement(['Full-time', 'Part-time', 'Contract', 'Freelance', 'Unemployed']),
+                salary: '$' + faker.finance.amount(30000, 150000, 0, ','),
+                ssn: faker.random.arrayElement(['201', '301', '401', '501']) + '-' + faker.datatype.number({min: 10, max: 99}) + '-' + faker.datatype.number({min: 1000, max: 9999}),
+
+                // 信用卡信息
+                cardType: faker.random.arrayElement(['American Express', 'Visa', 'MasterCard', 'Discover']),
+                cardNumber: faker.finance.creditCardNumber(),
+                cvv: faker.finance.creditCardCVV(),
+                expiry: faker.date.future(5).toLocaleDateString('en-US', {month: 'numeric', year: 'numeric'})
+            };
+
+            // 生成邮箱
+            currentData.email = (currentData.firstName + '.' + currentData.lastName + '@gmail.com').toLowerCase();
+            currentData.fullName = currentData.firstName + ' ' + currentData.lastName;
+
+            // 更新UI
+            updateUI();
+        }
+
+        // 更新界面
+        function updateUI() {
+            document.getElementById('fullName').textContent = currentData.fullName;
+            document.getElementById('gender').textContent = currentData.gender;
+            document.getElementById('birthday').textContent = currentData.birthday;
+            document.getElementById('prefix').textContent = currentData.prefix;
+            document.getElementById('hairColor').textContent = currentData.hairColor;
+            
+            document.getElementById('streetAddress').textContent = currentData.streetAddress;
+            document.getElementById('city').textContent = currentData.city;
+            document.getElementById('state').textContent = currentData.state;
+            document.getElementById('stateFull').textContent = currentData.stateFull;
+            document.getElementById('zipCode').textContent = currentData.zipCode;
+            document.getElementById('phone').textContent = currentData.phone;
+            document.getElementById('email').textContent = currentData.email;
+            
+            document.getElementById('jobTitle').textContent = currentData.jobTitle;
+            document.getElementById('company').textContent = currentData.company;
+            document.getElementById('industry').textContent = currentData.industry;
+            document.getElementById('companySize').textContent = currentData.companySize;
+            document.getElementById('employmentStatus').textContent = currentData.employmentStatus;
+            document.getElementById('salary').textContent = currentData.salary;
+            document.getElementById('ssn').textContent = currentData.ssn;
+            
+            document.getElementById('cardType').textContent = currentData.cardType;
+            document.getElementById('cardNumber').textContent = currentData.cardNumber;
+            document.getElementById('cvv').textContent = currentData.cvv;
+            document.getElementById('expiry').textContent = currentData.expiry;
+        }
+
+        // 复制文本
+        function copyText(element) {
+            const text = element.querySelector('span:first-child').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制: ' + text);
+            });
+        }
+
+        // 复制行文本
+        function copyRowText(element) {
+            const text = element.querySelector('.data-value span:first-child').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制: ' + text);
+            });
+        }
+
+        // 复制全部数据
+        function copyAllData() {
+            const allText = Object.entries(currentData).map(([key, value]) => `${key}: ${value}`).join('\n');
+            navigator.clipboard.writeText(allText).then(() => {
+                showToast('全部信息已复制到剪贴板');
+            });
+        }
+
+        // 导出JSON
+        function exportJSON() {
+            const jsonData = JSON.stringify(currentData, null, 2);
+            navigator.clipboard.writeText(jsonData).then(() => {
+                showToast('JSON数据已复制到剪贴板');
+            });
+        }
+
+        // 选择城市
+        function selectCity(city, state) {
+            document.getElementById('stateFilter').value = state;
+            updateCityOptions();
+            document.getElementById('cityFilter').value = city;
+            generateAllData();
+            document.getElementById('cityDropdown').classList.remove('show');
+        }
+
+        // 切换城市下拉菜单
+        function toggleCityDropdown() {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 点击外部关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('cityDropdown');
+            const trigger = event.target.closest('h4');
+            if (!dropdown.contains(event.target) && !trigger) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
