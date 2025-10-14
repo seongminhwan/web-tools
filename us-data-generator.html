@@ -56,6 +56,15 @@
             font-size: 18px;
         }
 
+        .shortcuts-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr 300px;
@@ -324,6 +333,9 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="shortcuts-info">
+                快捷键: R-重新生成 | A-复制地址 | Q-复制公司 | W-复制姓名
+            </div>
             <h1>美国数据生成器</h1>
             <div class="location-icon">📍</div>
         </div>
@@ -641,6 +653,49 @@
             'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
         };
 
+        // 真实公司名生成算法
+        const REALISTIC_COMPANY_GENERATOR = {
+            prefixes: [
+                'Advanced', 'Global', 'American', 'National', 'International', 'United', 'First',
+                'Premier', 'Elite', 'Superior', 'Alpha', 'Central', 'Metro', 'Capital',
+                'Summit', 'Pinnacle', 'Apex', 'Crown', 'Sterling', 'Diamond', 'Prime',
+                'Digital', 'Modern', 'Future', 'Next', 'Dynamic', 'Smart', 'Tech'
+            ],
+            
+            cores: [
+                'Solutions', 'Systems', 'Technologies', 'Industries', 'Enterprises', 'Corporation',
+                'Group', 'Holdings', 'Partners', 'Associates', 'Consulting', 'Services',
+                'Innovations', 'Networks', 'Communications', 'Software', 'Engineering',
+                'Manufacturing', 'Development', 'Investment', 'Financial', 'Healthcare',
+                'Energy', 'Transportation', 'Security', 'Analytics', 'Media'
+            ],
+            
+            suffixes: ['Inc', 'LLC', 'Corp', 'Co', 'Ltd', 'Company', 'Group'],
+            
+            founderNames: [
+                'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson',
+                'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee',
+                'Thompson', 'White', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker'
+            ],
+            
+            generate() {
+                const patterns = [
+                    () => this.randomChoice(this.prefixes) + ' ' + this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
+                    () => this.randomChoice(this.founderNames) + ' & ' + this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.suffixes),
+                    () => this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
+                    () => this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
+                    () => this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.suffixes)
+                ];
+                
+                const pattern = this.randomChoice(patterns);
+                return pattern();
+            },
+            
+            randomChoice(array) {
+                return array[Math.floor(Math.random() * array.length)];
+            }
+        };
+
         // 真实的城市-邮编数据库（基于真实数据）
         const REAL_ADDRESSES = {
             'NY': {
@@ -651,6 +706,10 @@
                 'Buffalo': {
                     zipCodes: ['14201', '14202', '14203', '14204', '14206', '14207', '14208', '14209', '14210', '14211', '14212', '14213', '14214', '14215', '14216', '14217', '14218', '14219', '14220', '14221'],
                     realStreets: ['Main Street', 'Elmwood Avenue', 'Delaware Avenue', 'Hertel Avenue', 'West Ferry Street', 'East Ferry Street', 'Forest Avenue', 'Grant Street', 'Lafayette Avenue', 'Niagara Street', 'Bailey Avenue', 'Genesee Street', 'William Street', 'Pearl Street', 'Church Street']
+                },
+                'Albany': {
+                    zipCodes: ['12201', '12202', '12203', '12204', '12205', '12206', '12207', '12208', '12209', '12210', '12211', '12212', '12214', '12220', '12222', '12223', '12224', '12225', '12226', '12227'],
+                    realStreets: ['State Street', 'Central Avenue', 'Western Avenue', 'Washington Avenue', 'Madison Avenue', 'Lark Street', 'Pearl Street', 'Broadway', 'Delaware Avenue', 'New Scotland Avenue', 'Quail Street', 'Manning Boulevard', 'Krumkill Road', 'Wolf Road', 'Colvin Avenue']
                 }
             },
             'CA': {
@@ -671,6 +730,22 @@
                 'Dallas': {
                     zipCodes: ['75201', '75202', '75203', '75204', '75205', '75206', '75207', '75208', '75209', '75210', '75211', '75212', '75214', '75215', '75216', '75217', '75218', '75219', '75220', '75223'],
                     realStreets: ['Main Street', 'Elm Street', 'Commerce Street', 'Jackson Street', 'Wood Street', 'Young Street', 'Ervay Street', 'St. Paul Street', 'Harwood Street', 'Live Oak Street', 'Pearl Street', 'Bryan Street', 'McKinney Avenue', 'Ross Avenue', 'Canton Street']
+                },
+                'Austin': {
+                    zipCodes: ['78701', '78702', '78703', '78704', '78705', '78712', '78717', '78719', '78721', '78722', '78723', '78724', '78725', '78726', '78727', '78728', '78729', '78731', '78732', '78733'],
+                    realStreets: ['Congress Avenue', 'Lamar Boulevard', 'MoPac Expressway', 'I-35', 'Guadalupe Street', 'Red River Street', 'Brazos Street', 'Colorado Street', 'Lavaca Street', 'Nueces Street', 'Rio Grande Street', 'West Avenue', 'Shoal Creek Boulevard', 'Burnet Road', 'Airport Boulevard']
+                },
+                'San Antonio': {
+                    zipCodes: ['78201', '78202', '78203', '78204', '78205', '78207', '78208', '78209', '78210', '78211', '78212', '78213', '78214', '78215', '78216', '78217', '78218', '78219', '78220', '78221'],
+                    realStreets: ['Commerce Street', 'Market Street', 'Houston Street', 'San Pedro Avenue', 'Broadway', 'McCullough Avenue', 'New Braunfels Avenue', 'Gevers Street', 'South Alamo Street', 'South St. Marys Street', 'Guadalupe Street', 'Blanco Road', 'West Avenue', 'Fredericksburg Road', 'Bandera Road']
+                },
+                'Laredo': {
+                    zipCodes: ['78040', '78041', '78042', '78043', '78044', '78045', '78046'],
+                    realStreets: ['San Bernardo Avenue', 'McPherson Road', 'Zapata Highway', 'Santa Ursula Avenue', 'Shiloh Drive', 'Del Mar Boulevard', 'Loop 20', 'Saunders Street', 'Hillside Road', 'Bob Bullock Loop', 'Callaghan Road', 'Victoria Street', 'Washington Street', 'Matamoros Street', 'Iturbide Street']
+                },
+                'El Paso': {
+                    zipCodes: ['79901', '79902', '79903', '79904', '79905', '79906', '79907', '79908', '79910', '79911', '79912', '79913', '79914', '79915', '79916', '79917', '79918', '79922', '79924', '79925'],
+                    realStreets: ['Mesa Street', 'Paisano Drive', 'Montana Avenue', 'Dyer Street', 'Piedras Street', 'Alameda Avenue', 'Yandell Drive', 'Rio Grande Avenue', 'Magoffin Avenue', 'Campbell Street', 'Stanton Street', 'Santa Fe Street', 'El Paso Street', 'San Antonio Avenue', 'Octavia Street']
                 }
             },
             'FL': {
@@ -683,6 +758,26 @@
                 'Chicago': {
                     zipCodes: ['60601', '60602', '60603', '60604', '60605', '60606', '60607', '60608', '60609', '60610', '60611', '60612', '60613', '60614', '60615', '60616', '60617', '60618', '60619', '60620'],
                     realStreets: ['Michigan Avenue', 'State Street', 'Wabash Avenue', 'Wells Street', 'LaSalle Street', 'Clark Street', 'Dearborn Street', 'Franklin Street', 'Canal Street', 'Jefferson Street', 'Des Plaines Street', 'Halsted Street', 'Green Street', 'Peoria Street', 'Morgan Street']
+                }
+            },
+            'GA': {
+                'Atlanta': {
+                    zipCodes: ['30301', '30302', '30303', '30304', '30305', '30306', '30307', '30308', '30309', '30310', '30311', '30312', '30313', '30314', '30315', '30316', '30317', '30318', '30319', '30320'],
+                    realStreets: ['Peachtree Street', 'Spring Street', 'West Peachtree Street', 'Piedmont Avenue', 'Juniper Street', 'Courtland Street', 'Boulevard', 'Memorial Drive', 'DeKalb Avenue', 'Auburn Avenue', 'Edgewood Avenue', 'North Avenue', 'Ponce de Leon Avenue', 'Monroe Drive', 'Virginia Avenue']
+                },
+                'Athens': {
+                    zipCodes: ['30601', '30602', '30605', '30606', '30607', '30608', '30609'],
+                    realStreets: ['Broad Street', 'Prince Avenue', 'Milledge Avenue', 'Baxter Street', 'Lumpkin Street', 'Jackson Street', 'Thomas Street', 'Oglethorpe Avenue', 'Dougherty Street', 'Cedar Street', 'Pulaski Street', 'Hancock Avenue', 'Alps Road', 'Epps Bridge Parkway', 'Atlanta Highway']
+                }
+            },
+            'NC': {
+                'Charlotte': {
+                    zipCodes: ['28201', '28202', '28203', '28204', '28205', '28206', '28207', '28208', '28209', '28210', '28211', '28212', '28213', '28214', '28215', '28216', '28217', '28223', '28226', '28227'],
+                    realStreets: ['Trade Street', 'Tryon Street', 'Church Street', 'College Street', 'Davidson Street', 'Mint Street', 'Cedar Street', 'Pine Street', 'Poplar Street', 'Brevard Street', 'Carson Boulevard', 'Freedom Drive', 'Independence Boulevard', 'Providence Road', 'Park Road']
+                },
+                'Asheville': {
+                    zipCodes: ['28801', '28802', '28803', '28804', '28805', '28806'],
+                    realStreets: ['Patton Avenue', 'Haywood Street', 'College Street', 'Broadway Street', 'Biltmore Avenue', 'Charlotte Street', 'Church Street', 'Woodfin Street', 'Merrimon Avenue', 'Hendersonville Road', 'Airport Road', 'Tunnel Road', 'Asheland Avenue', 'Leicester Highway', 'Swannanoa River Road']
                 }
             }
         };
@@ -762,12 +857,78 @@
                 'TX': () => `7${Math.floor(Math.random() * 9)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
                 'FL': () => `3${Math.floor(Math.random() * 4)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
                 'IL': () => `6${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'PA': () => `1${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'OH': () => `4${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'GA': () => `3${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'NC': () => `2${Math.floor(Math.random() * 9)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'MI': () => `4${Math.floor(Math.random() * 3) + 8}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'WA': () => `9${Math.floor(Math.random() * 9) + 8}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'AZ': () => `8${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'MA': () => `0${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'TN': () => `3${Math.floor(Math.random() * 9) + 7}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'IN': () => `4${Math.floor(Math.random() * 8) + 6}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'MO': () => `6${Math.floor(Math.random() * 7) + 3}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'MD': () => `2${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'WI': () => `5${Math.floor(Math.random() * 4)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'MN': () => `5${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'CO': () => `8${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'AL': () => `3${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'SC': () => `2${Math.floor(Math.random() * 7) + 9}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'LA': () => `7${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'KY': () => `4${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'OR': () => `9${Math.floor(Math.random() * 8) + 7}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'OK': () => `7${Math.floor(Math.random() * 5) + 3}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'CT': () => `0${Math.floor(Math.random() * 3) + 6}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+                'IA': () => `5${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
             };
             
             return stateZipRanges[state] ? stateZipRanges[state]() : `${Math.floor(Math.random() * 90000) + 10000}`;
         }
 
         let currentData = {};
+
+        // 全局快捷键监听
+        document.addEventListener('keydown', function(event) {
+            // 只在没有焦点在输入框时才响应快捷键
+            if (document.activeElement.tagName === 'INPUT' || 
+                document.activeElement.tagName === 'SELECT' || 
+                document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+            switch (key) {
+                case 'r':
+                    event.preventDefault();
+                    generateAllData();
+                    showToast('数据已重新生成 (快捷键: R)');
+                    break;
+                case 'a':
+                    event.preventDefault();
+                    if (currentData.streetAddress) {
+                        navigator.clipboard.writeText(currentData.streetAddress).then(() => {
+                            showToast('街道地址已复制: ' + currentData.streetAddress);
+                        });
+                    }
+                    break;
+                case 'q':
+                    event.preventDefault();
+                    if (currentData.company) {
+                        navigator.clipboard.writeText(currentData.company).then(() => {
+                            showToast('公司名称已复制: ' + currentData.company);
+                        });
+                    }
+                    break;
+                case 'w':
+                    event.preventDefault();
+                    if (currentData.fullName) {
+                        navigator.clipboard.writeText(currentData.fullName).then(() => {
+                            showToast('用户名称已复制: ' + currentData.fullName);
+                        });
+                    }
+                    break;
+            }
+        });
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
@@ -833,10 +994,10 @@
                 phone: faker.phone.phoneNumber('(###) ###-####'),
                 email: '',
 
-                // 就业信息
+                // 就业信息（使用改进的公司名生成器）
                 jobTitle: faker.name.jobTitle(),
-                company: faker.company.companyName().replace(/[^\w\s]/gi, ''),
-                industry: faker.random.arrayElement(['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Sports', 'Entertainment', 'Real Estate', 'Consulting']),
+                company: REALISTIC_COMPANY_GENERATOR.generate(),
+                industry: faker.random.arrayElement(['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Sports', 'Entertainment', 'Real Estate', 'Consulting', 'Legal Services', 'Marketing', 'Aerospace', 'Automotive', 'Energy', 'Telecommunications', 'Pharmaceuticals']),
                 companySize: faker.random.arrayElement(['1-10', '11-50', '51-100', '101-500', '501-1000', '1000+']),
                 employmentStatus: faker.random.arrayElement(['Full-time', 'Part-time', 'Contract', 'Freelance', 'Unemployed']),
                 salary: '$' + faker.finance.amount(30000, 150000, 0, ','),
