@@ -334,7 +334,7 @@
     <div class="container">
         <div class="header">
             <div class="shortcuts-info">
-                快捷键: R-重新生成 | A-复制地址 | Q-复制公司 | W-复制姓名
+                快捷键: R-重新生成 | E-复制完整地址 | A-复制地址 | Q-复制公司 | W-复制姓名
             </div>
             <h1>美国数据生成器</h1>
             <div class="location-icon">📍</div>
@@ -506,6 +506,13 @@
                             <span class="copy-icon">📋</span>
                         </div>
                     </div>
+                    <div class="data-item" onclick="copyRowText(this)">
+                        <span class="data-label">完整地址:</span>
+                        <div class="data-value">
+                            <span id="fullAddress">-</span>
+                            <span class="copy-icon">📋</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 信用卡信息 -->
@@ -652,43 +659,100 @@
             'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
             'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
         };
+        
+        const NameGenerator = {
+            firstNamesMale: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles', 'Christopher', 'Daniel', 'Matthew', 'Anthony', 'Mark', 'Donald', 'Steven', 'Paul', 'Andrew', 'Joshua', 'Kenneth', 'Kevin', 'Brian', 'George', 'Edward', 'Ronald', 'Timothy', 'Jason', 'Jeffrey', 'Ryan', 'Jacob', 'Gary', 'Nicholas', 'Eric', 'Jonathan', 'Stephen', 'Larry', 'Justin', 'Scott', 'Brandon', 'Benjamin', 'Samuel', 'Gregory', 'Frank', 'Alexander', 'Raymond', 'Patrick', 'Jack', 'Dennis', 'Jerry', 'Tyler', 'Aaron', 'Jose', 'Adam', 'Henry', 'Nathan', 'Douglas', 'Zachary', 'Peter', 'Kyle', 'Walter', 'Ethan', 'Jeremy', 'Harold', 'Keith', 'Christian', 'Roger', 'Noah', 'Gerald', 'Carl', 'Terry', 'Sean', 'Austin', 'Arthur', 'Lawrence', 'Jesse', 'Dylan', 'Bryan', 'Joe', 'Jordan', 'Billy', 'Bruce', 'Albert', 'Willie', 'Gabriel', 'Logan', 'Alan', 'Juan', 'Wayne', 'Roy', 'Ralph', 'Randy', 'Eugene', 'Vincent', 'Russell', 'Elijah', 'Louis', 'Bobby', 'Philip', 'Johnny'],
+            firstNamesFemale: ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Nancy', 'Lisa', 'Betty', 'Margaret', 'Sandra', 'Ashley', 'Kimberly', 'Emily', 'Donna', 'Michelle', 'Dorothy', 'Carol', 'Amanda', 'Melissa', 'Deborah', 'Stephanie', 'Rebecca', 'Sharon', 'Laura', 'Cynthia', 'Kathleen', 'Amy', 'Shirley', 'Angela', 'Helen', 'Anna', 'Brenda', 'Pamela', 'Nicole', 'Emma', 'Samantha', 'Katherine', 'Christine', 'Debra', 'Rachel', 'Catherine', 'Carolyn', 'Janet', 'Ruth', 'Maria', 'Heather', 'Diane', 'Virginia', 'Julie', 'Joyce', 'Victoria', 'Olivia', 'Kelly', 'Christina', 'Lauren', 'Joan', 'Evelyn', 'Judith', 'Megan', 'Cheryl', 'Andrea', 'Hannah', 'Martha', 'Jacqueline', 'Frances', 'Gloria', 'Ann', 'Teresa', 'Kathryn', 'Sara', 'Janice', 'Jean', 'Alice', 'Madison', 'Doris', 'Rose', 'Julie', 'Judy', 'Grace', 'Denise', 'Beverly', 'Marilyn', 'Amber', 'Theresa', 'Danielle', 'Diana', 'Brittany', 'Abigail', 'Jane', 'Natalie', 'Lori', 'Tiffany', 'Alexis'],
+            lastNames: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker', 'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts', 'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker', 'Cruz', 'Edwards', 'Collins', 'Reyes', 'Stewart', 'Morris', 'Morales', 'Murphy', 'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan', 'Cooper', 'Peterson', 'Bailey', 'Reed', 'Kelly', 'Howard', 'Ramos', 'Kim', 'Cox', 'Ward', 'Richardson', 'Watson', 'Brooks', 'Chavez', 'Wood', 'James', 'Bennett', 'Gray', 'Mendoza', 'Ruiz', 'Hughes', 'Price', 'Alvarez', 'Castillo', 'Sanders', 'Patel', 'Myers', 'Long', 'Ross', 'Foster', 'Jimenez', 'Powell', 'Jenkins', 'Perry', 'Russell', 'Sullivan', 'Bell', 'Coleman', 'Butler', 'Henderson', 'Barnes', 'Gonzales', 'Fisher', 'Vasquez', 'Simmons', 'Romero', 'Jordan', 'Patterson', 'Alexander', 'Hamilton', 'Graham', 'Reynolds', 'Griffin', 'Wallace', 'Moreno', 'West', 'Cole', 'Hayes', 'Bryant', 'Herrera', 'Gibson', 'Ellis', 'Tran', 'Medina', 'Aguilar', 'Stevens', 'Murray', 'Ford', 'Castro', 'Marshall', 'Owen', 'Harrison', 'Fernandez', 'McDonald', 'Woods', 'Washington', 'Kennedy', 'Wells', 'Vargas', 'Henry', 'Chen', 'Freeman', 'Webb', 'Tucker', 'Guzman', 'Burns', 'Crawford', 'Olson', 'Simpson', 'Porter', 'Hunter', 'Gordon', 'Mendez', 'Silva', 'Shaw', 'Snyder', 'Mason', 'Dixon', 'Munoz', 'Hunt', 'Hicks', 'Holmes', 'Palmer', 'Wagner', 'Black', 'Robertson', 'Boyd', 'Rose', 'Stone', 'Salazar', 'Fox', 'Warren', 'Mills', 'Meyer', 'Rice', 'Schmidt', 'Garza', 'Daniels', 'Ferguson', 'Nichols', 'Stephens', 'Soto', 'Weaver', 'Ryan', 'Gardner', 'Payne', 'Grant', 'Dunn', 'Kelley', 'Spencer', 'Hawkins', 'Arnold', 'Pierce', 'Vazquez', 'Hansen', 'Peters', 'Santos', 'Hart', 'Bradley', 'Knight', 'Elliott', 'Cunningham', 'Duncan', 'Burke', 'Williamson', 'Bishop', 'Fuller', 'Harper', 'Lawrence', 'Andrews', 'Warren', 'Jordan', 'George', 'West', 'Cole', 'Hayes', 'Bryant', 'Herrera', 'Gibson', 'Ellis', 'Tran', 'Medina', 'Aguilar', 'Stevens', 'Murray', 'Ford', 'Castro', 'Marshall', 'Owens', 'Harrison', 'Fernandez', 'Mcdonald', 'Woods', 'Washington', 'Kennedy', 'Wells', 'Vargas', 'Henry', 'Chen', 'Freeman', 'Webb', 'Tucker', 'Guzman', 'Burns', 'Crawford', 'Olson', 'Simpson', 'Porter', 'Hunter', 'Hicks', 'Crawford', 'Henry', 'Boyd', 'Mason', 'Morales', 'Kennedy', 'Warren', 'Dixon', 'Ramos', 'Reyes', 'Burns', 'Gordon', 'Shaw', 'Holmes', 'Rice', 'Robertson', 'Hunt', 'Black', 'Daniels', 'Palmer', 'Mills', 'Nichols', 'Grant', 'Knight', 'Ferguson', 'Rose', 'Stone', 'Hawkins', 'Dunn', 'Perkins', 'Hudson', 'Spencer', 'Gardner', 'Stephens', 'Payne', 'Pierce', 'Berry', 'Matthews', 'Arnold', 'Wagner', 'Willis', 'Ray', 'Watkins', 'Olson', 'Carroll', 'Duncan', 'Snyder', 'Hart', 'Cunningham', 'Bradley', 'Lane', 'Andrews', 'Ruiz', 'Harper', 'Fox', 'Riley', 'Armstrong', 'Carpenter', 'Weaver', 'Greene', 'Lawrence', 'Elliott', 'Chavez', 'Sims', 'Austin', 'Peters', 'Kelley', 'Franklin', 'Lawson', 'Fields', 'Gutierrez', 'Ryan', 'Schmidt', 'Carr', 'Vasquez', 'Wheeler', 'Chapman', 'Oliver', 'Montgomery', 'Richards', 'Williamson', 'Johnston', 'Banks', 'Meyer', 'Bishop', 'Mccoy', 'Howell', 'Alvarez', 'Morrison', 'Hansen', 'Fernandez', 'Garza', 'Harvey', 'Little', 'Burton', 'Stanley', 'Nguyen', 'George', 'Jacobs', 'Reid', 'Kim', 'Fuller', 'Lynch', 'Dean', 'Gilbert', 'Garrett', 'Romero', 'Welch', 'Larson', 'Frazier', 'Burke', 'Hanson', 'Day', 'Mendez', 'Vaughn', 'Lucas', 'Pearson', 'Medina', 'Graham', 'Graves', 'Hoffman', 'Hughes', 'Wolfe', 'Murray', 'Walters', 'Ortiz', 'Guzman', 'Powell', 'Mccormick', 'Harvey', 'Little', 'Burton', 'Stanley', 'George', 'Jacobs', 'Reid', 'Kim', 'Fuller', 'Lynch', 'Dean', 'Gilbert', 'Garrett', 'Romero', 'Welch', 'Larson', 'Frazier', 'Burke', 'Hanson', 'Day', 'Mendez', 'Vaughn', 'Lucas', 'Pearson', 'Medina', 'Graham', 'Graves', 'Hoffman', 'Hughes', 'Wolfe', 'Murray', 'Walters', 'Ortiz', 'Guzman', 'Powell', 'Mccormick', 'Cain', 'Phelps', 'Jones', 'Hardy', 'Sharp', 'Barber', 'Acosta', 'Case', 'Ball', 'Singleton', 'Swanson', 'Horton', 'Mcbride', 'Mcguire', 'Pratt', 'Sellers', 'Barrett', 'Billings', 'Brock', 'Cowan', 'Dalton', 'Dotson', 'Finch', 'Hobbs', 'Justice', 'Leach', 'Pace', 'Robbins', 'Sexton', 'Vance', 'Waller', 'Yates', 'Zimmerman'],
+            
+            generate() {
+                const gender = faker.random.arrayElement(['Male', 'Female']);
+                const firstName = gender === 'Male' ? faker.random.arrayElement(this.firstNamesMale) : faker.random.arrayElement(this.firstNamesFemale);
+                const lastName = faker.random.arrayElement(this.lastNames);
+                return {
+                    firstName,
+                    lastName,
+                    fullName: `${firstName} ${lastName}`,
+                    gender
+                };
+            }
+        };
 
-        // 真实公司名生成算法
-        const REALISTIC_COMPANY_GENERATOR = {
-            prefixes: [
-                'Advanced', 'Global', 'American', 'National', 'International', 'United', 'First',
-                'Premier', 'Elite', 'Superior', 'Alpha', 'Central', 'Metro', 'Capital',
-                'Summit', 'Pinnacle', 'Apex', 'Crown', 'Sterling', 'Diamond', 'Prime',
-                'Digital', 'Modern', 'Future', 'Next', 'Dynamic', 'Smart', 'Tech'
+        // 超级强化的企业名称生成器 - 支持亿级唯一性
+        const MEGA_COMPANY_GENERATOR = {
+            // 地理前缀 (200+)
+            geographicPrefixes: [
+                'Global', 'International', 'Worldwide', 'Universal', 'Continental', 'Intercontinental', 'Transnational', 'American', 'United States', 'US', 'National', 'Federal', 'Regional', 'Metropolitan', 'Urban', 'Suburban', 'North American', 'Western', 'Eastern', 'Southern', 'Northern', 'Central', 'Pacific', 'Atlantic', 'Midwest', 'Southwest', 'Northeast', 'Southeast', 'Northwest', 'Coastal', 'Inland', 'Desert', 'Mountain', 'Valley', 'Plains', 'Frontier', 'Pioneer', 'Colonial', 'Liberty', 'Freedom', 'Eagle', 'Star', 'Patriot', 'Republic', 'United', 'Alliance', 'Union', 'Federation', 'Coalition', 'California', 'Texas', 'Florida', 'New York', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia', 'Michigan', 'Washington', 'Arizona', 'Massachusetts', 'Tennessee', 'Indiana', 'Missouri', 'Maryland', 'Wisconsin', 'Colorado', 'Minnesota', 'Alabama', 'Louisiana', 'Kentucky', 'Oregon', 'Oklahoma', 'Connecticut', 'Iowa', 'Mississippi', 'Arkansas', 'Kansas', 'Utah', 'Nevada', 'New Mexico', 'West Virginia', 'Nebraska', 'Idaho', 'Hawaii', 'Maine', 'New Hampshire', 'Rhode Island', 'Montana', 'Delaware', 'South Dakota', 'Alaska', 'North Dakota', 'Vermont', 'Wyoming', 'Silicon Valley', 'Bay Area', 'Wall Street', 'Main Street', 'Broadway', 'Evergreen', 'Golden State', 'Lone Star', 'Sunshine State', 'Empire State', 'Keystone', 'Buckeye', 'Peach State', 'Great Lakes', 'Centennial', 'Bay State', 'Volunteer', 'Hoosier', 'Show Me', 'Old Line', 'Badger', 'Centennial', 'North Star', 'Yellowhammer', 'Pelican', 'Bluegrass', 'Beaver', 'Sooner', 'Constitution', 'Hawkeye', 'Magnolia', 'Natural', 'Sunflower', 'Beehive', 'Silver', 'Land of Enchantment', 'Mountain State', 'Cornhusker', 'Gem', 'Aloha', 'Pine Tree', 'Granite', 'Ocean', 'Big Sky', 'First State', 'Mount Rushmore', 'The Last Frontier', 'Peace Garden', 'Green Mountain', 'Equality'
+            ],
+
+            // 质量/规模/概念前缀 (300+)
+            qualityPrefixes: [
+                'Advanced', 'Superior', 'Premium', 'Elite', 'Prime', 'First', 'Top', 'Best', 'Leading', 'Premier', 'Excellence', 'Quality', 'Precision', 'Perfect', 'Ultimate', 'Supreme', 'Optimal', 'Maximum', 'Peak', 'Apex', 'Summit', 'Pinnacle', 'Crown', 'Royal', 'Imperial', 'Master', 'Expert', 'Professional', 'Specialist', 'Certified', 'Authorized', 'Licensed', 'Approved', 'Verified', 'Trusted', 'Reliable', 'Proven', 'Established', 'Experienced', 'Veteran', 'Senior', 'Executive', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Crystal', 'Pearl', 'Emerald', 'Ruby', 'Sapphire', 'Sterling', 'Noble', 'Prestige', 'Luxury', 'Exclusive', 'Select', 'Choice', 'Preferred', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Omega', 'Zeta', 'Sigma', 'Phoenix', 'Titan', 'Giant', 'Mega', 'Super', 'Ultra', 'Hyper', 'Turbo', 'Power', 'Force', 'Strong', 'Solid', 'Stable', 'Secure', 'Safe', 'Sure', 'Smart', 'Bright', 'Sharp', 'Quick', 'Fast', 'Rapid', 'Swift', 'Agile', 'Dynamic', 'Active', 'Energy', 'Vital', 'Live', 'Fresh', 'New', 'Modern', 'Future', 'Next', 'Forward', 'Progressive', 'Innovative', 'Creative', 'Original', 'Unique', 'Special', 'Custom', 'Tailored', 'Focused', 'Targeted', 'Specialized', 'Dedicated', 'Committed', 'Devoted', 'Integrated', 'Comprehensive', 'Complete', 'Total', 'Full', 'Absolute', 'Pure', 'True', 'Real', 'Genuine', 'Authentic', 'Classic', 'Traditional', 'Heritage', 'Legacy', 'Landmark', 'Milestone', 'Cornerstone', 'Foundation', 'Base', 'Core', 'Central', 'Main', 'Quantum', 'Nexus', 'Vertex', 'Zenith', 'Meridian', 'Horizon', 'Spectrum', 'Paradigm', 'Synergy', 'Catalyst', 'Momentum', 'Velocity', 'Momentum', 'Vanguard', 'Guardian', 'Sentinel', 'Aegis', 'Shield', 'Fortress', 'Bastion', 'Keystone', 'Lighthouse', 'Beacon', 'Compass', 'Anchor', 'Bridge', 'Gateway', 'Portal', 'Channel', 'Conduit', 'Matrix', 'Fabric', 'Tapestry', 'Mosaic', 'Kaleidoscope', 'Odyssey', 'Quest', 'Journey', 'Voyage', 'Expedition', 'Venture', 'Endeavor', 'Mission', 'Charter', 'Covenant', 'Pact', 'Treaty', 'Accord', 'Concord', 'Harmony', 'Unity', 'Triumph', 'Victory', 'Success', 'Prosperity', 'Abundance', 'Flourish', 'Thrive', 'Growth', 'Ascend', 'Rise', 'Soar', 'Elevate', 'Evolve', 'Transform', 'Revolution', 'Renaissance', 'Genesis', 'Origin', 'Source', 'Dawn', 'Daybreak', 'Starlight', 'Sunbeam', 'Moonlight', 'Nebula', 'Galaxy', 'Cosmos', 'Infinity', 'Eternity'
+            ],
+
+            // 技术/现代前缀 (150+)
+            techPrefixes: [
+                'Digital', 'Cyber', 'Tech', 'Data', 'Info', 'Net', 'Web', 'Online', 'Virtual', 'Cloud', 'Smart', 'Intelligent', 'AI', 'Automated', 'Robotic', 'Electronic', 'Electric', 'Wireless', 'Mobile', 'Portable', 'Flexible', 'Adaptive', 'Responsive', 'Interactive', 'Connected', 'Networked', 'Integrated', 'Synchronized', 'Optimized', 'Enhanced', 'Upgraded', 'Improved', 'Advanced', 'High-Tech', 'Cutting-Edge', 'State-of-the-Art', 'Revolutionary', 'Breakthrough', 'Innovative', 'Pioneering', 'Groundbreaking', 'Leading-Edge', 'Next-Gen', 'Future-Ready', 'Quantum', 'Nano', 'Micro', 'Macro', 'Multi', 'Omni', 'Universal', 'Global', 'Worldwide', 'Precision', 'Accurate', 'Exact', 'Perfect', 'Flawless', 'Seamless', 'Smooth', 'Efficient', 'Effective', 'Powerful', 'Robust', 'Reliable', 'Secure', 'Protected', 'Encrypted', 'Verified', 'Logic', 'Code', 'Script', 'Algorithm', 'Protocol', 'Framework', 'Engine', 'Core', 'Kernel', 'OS', 'Firmware', 'Middleware', 'API', 'SDK', 'IDE', 'Compiler', 'Interpreter', 'VM', 'Container', 'Server', 'Client', 'Node', 'Edge', 'Mesh', 'Grid', 'Cluster', 'Array', 'Stack', 'Queue', 'Tree', 'Graph', 'Link', 'Chain', 'Block', 'Ledger', 'Token', 'Coin', 'Crypto', 'DeFi', 'DAO', 'NFT', 'Metaverse', 'AR', 'VR', 'XR', 'MR', 'IoT', '5G', '6G', 'Satellite', 'Drone', 'Sensor', 'Actuator', 'Controller', 'Processor', 'Chip', 'Circuit', 'Board', 'Module', 'Component', 'Device', 'Appliance', 'Gadget', 'Widget'
+            ],
+
+            // 行业核心词汇 (400+)
+            industryBases: [
+                'Tech', 'Technologies', 'Technology', 'Systems', 'Solutions', 'Software', 'Hardware', 'Computing', 'Digital', 'Data', 'Analytics', 'Intelligence', 'AI', 'Robotics', 'Automation', 'Engineering', 'Development', 'Innovation', 'Research', 'Labs', 'Laboratories', 'Networks', 'Communications', 'Telecommunications', 'Internet', 'Web', 'Online', 'Cloud', 'Platform', 'Applications', 'Apps', 'Financial', 'Finance', 'Capital', 'Investment', 'Investments', 'Banking', 'Credit', 'Loan', 'Insurance', 'Assurance', 'Securities', 'Assets', 'Wealth', 'Management', 'Advisory', 'Consulting', 'Business', 'Commercial', 'Industrial', 'Corporate', 'Enterprise', 'Ventures', 'Holdings', 'Group', 'Corporation', 'Company', 'Enterprises', 'Industries', 'Operations', 'Services', 'Healthcare', 'Health', 'Medical', 'Medicine', 'Pharmaceutical', 'Pharma', 'Biotech', 'Biotechnology', 'Research', 'Clinical', 'Therapeutic', 'Treatment', 'Care', 'Wellness', 'Fitness', 'Nutrition', 'Dental', 'Vision', 'Surgical', 'Hospital', 'Clinic', 'Center', 'Institute', 'Foundation', 'Manufacturing', 'Production', 'Factory', 'Plant', 'Works', 'Mills', 'Assembly', 'Processing', 'Materials', 'Components', 'Parts', 'Equipment', 'Machinery', 'Tools', 'Instruments', 'Devices', 'Products', 'Goods', 'Items', 'Supplies', 'Resources', 'Raw', 'Finished', 'Quality', 'Energy', 'Power', 'Electric', 'Electrical', 'Solar', 'Wind', 'Nuclear', 'Oil', 'Gas', 'Coal', 'Renewable', 'Clean', 'Green', 'Environmental', 'Eco', 'Sustainable', 'Conservation', 'Recycling', 'Waste', 'Water', 'Air', 'Earth', 'Natural', 'Resources', 'Utilities', 'Infrastructure', 'Transportation', 'Transport', 'Logistics', 'Shipping', 'Delivery', 'Distribution', 'Supply', 'Chain', 'Freight', 'Cargo', 'Moving', 'Storage', 'Warehouse', 'Fulfillment', 'Express', 'Airlines', 'Aviation', 'Aerospace', 'Marine', 'Maritime', 'Railroad', 'Trucking', 'Automotive', 'Real Estate', 'Property', 'Properties', 'Development', 'Construction', 'Building', 'Builders', 'Contractors', 'Architecture', 'Design', 'Planning', 'Urban', 'Residential', 'Commercial', 'Industrial', 'Infrastructure', 'Projects', 'Sites', 'Land', 'Housing', 'Homes', 'Education', 'Educational', 'Training', 'Learning', 'Teaching', 'Academic', 'School', 'College', 'University', 'Institute', 'Academy', 'Center', 'Programs', 'Courses', 'Certification', 'Professional', 'Development', 'Skills', 'Knowledge', 'Research', 'Studies', 'Media', 'Entertainment', 'Broadcasting', 'Television', 'Radio', 'Publishing', 'Content', 'Creative', 'Production', 'Studios', 'Games', 'Gaming', 'Sports', 'Recreation', 'Leisure', 'Arts', 'Culture', 'Music', 'Film', 'Video', 'Digital', 'Online', 'Streaming', 'Retail', 'Consumer', 'Products', 'Goods', 'Merchandise', 'Sales', 'Marketing', 'Advertising', 'Branding', 'Promotion', 'Distribution', 'Wholesale', 'Direct', 'Online', 'E-commerce', 'Shopping', 'Store', 'Mall', 'Center', 'Outlet', 'Market', 'Trade', 'Commerce', 'Food', 'Beverage', 'Agriculture', 'Farming', 'Harvest', 'Crops', 'Livestock', 'Fisheries', 'Forestry', 'Mining', 'Metals', 'Minerals', 'Gems', 'Stones', 'Chemicals', 'Plastics', 'Polymers', 'Textiles', 'Apparel', 'Fashion', 'Footwear', 'Accessories', 'Cosmetics', 'Beauty', 'Grooming', 'Hygiene', 'Furniture', 'Decor', 'Home', 'Garden', 'Toys', 'Hobbies', 'Crafts', 'Gifts', 'Flowers', 'Jewelry', 'Watches', 'Eyewear', 'Luggage', 'Bags', 'Travel', 'Tourism', 'Hospitality', 'Hotel', 'Resort', 'Casino', 'Restaurant', 'Cafe', 'Bar', 'Club', 'Catering', 'Events', 'Security', 'Defense', 'Military', 'Law', 'Legal', 'Justice', 'Government', 'Public', 'Civic', 'Social', 'Community', 'Charity', 'Non-Profit', 'Philanthropy'
+            ],
+
+            // 企业后缀 (100+)
+            companySuffixes: [
+                'Inc', 'Corp', 'Corporation', 'Company', 'Co', 'LLC', 'Ltd', 'Limited', 'Group', 'Holdings', 'Enterprises', 'Industries', 'Systems', 'Solutions', 'Technologies', 'Services', 'Consulting', 'Associates', 'Partners', 'Partnership', 'Ventures', 'Capital', 'Investment', 'Management', 'Advisors', 'Advisory', 'Specialists', 'Experts', 'Professionals', 'Network', 'Alliance', 'Coalition', 'Federation', 'Union', 'Society', 'Organization', 'Institute', 'Foundation', 'Center', 'Hub', 'Works', 'Labs', 'Research', 'Development', 'Innovation', 'Studio', 'Agency', 'Firm', 'Office', 'Bureau', 'Division', 'Department', 'Unit', 'Branch', 'Sector', 'Segment', 'Arm', 'Wing', 'Fleet', 'Force', 'Team', 'Crew', 'Guild', 'Syndicate', 'Consortium', 'Cooperative', 'Collective', 'Commune', 'Circle', 'Forum', 'Council', 'Board', 'Commission', 'Committee', 'Trust', 'Fund', 'Bank', 'House', 'Post', 'Press', 'Gazette', 'Journal', 'Chronicle', 'Times', 'World', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annual'
             ],
             
-            cores: [
-                'Solutions', 'Systems', 'Technologies', 'Industries', 'Enterprises', 'Corporation',
-                'Group', 'Holdings', 'Partners', 'Associates', 'Consulting', 'Services',
-                'Innovations', 'Networks', 'Communications', 'Software', 'Engineering',
-                'Manufacturing', 'Development', 'Investment', 'Financial', 'Healthcare',
-                'Energy', 'Transportation', 'Security', 'Analytics', 'Media'
-            ],
-            
-            suffixes: ['Inc', 'LLC', 'Corp', 'Co', 'Ltd', 'Company', 'Group'],
-            
-            founderNames: [
-                'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson',
-                'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee',
-                'Thompson', 'White', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker'
-            ],
+            surnames: NameGenerator.lastNames, // Reuse from NameGenerator
+            cityNames: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose', 'Austin', 'Jacksonville', 'Fort Worth', 'Columbus', 'Charlotte', 'San Francisco', 'Indianapolis', 'Seattle', 'Denver', 'Washington', 'Boston', 'El Paso', 'Nashville', 'Detroit', 'Oklahoma City', 'Portland', 'Las Vegas', 'Memphis', 'Louisville', 'Baltimore', 'Milwaukee', 'Albuquerque', 'Tucson', 'Fresno', 'Mesa', 'Sacramento', 'Atlanta', 'Kansas City', 'Colorado Springs', 'Omaha', 'Raleigh', 'Miami', 'Long Beach', 'Virginia Beach', 'Oakland', 'Minneapolis', 'Tulsa', 'Arlington', 'Tampa', 'New Orleans', 'Wichita', 'Cleveland', 'Bakersfield', 'Aurora', 'Anaheim', 'Honolulu', 'Santa Ana', 'Riverside', 'Corpus Christi', 'Lexington', 'Henderson', 'Stockton', 'Buffalo', 'Saint Paul', 'Toledo', 'Newark', 'Plano', 'Fort Wayne', 'St. Petersburg', 'Laredo', 'Jersey City', 'Chula Vista', 'Orlando', 'Anchorage', 'Lincoln', 'Chandler', 'Durham', 'Madison', 'Lubbock'],
+            numericSuffixes: ['21', '24', '365', '360', '247', '100', '1st', '2nd', '3rd', 'One', 'Two', 'Three', 'Alpha', 'Beta', 'Omega', 'Prime', 'Vision', 'Core', 'One', 'First', '101'],
             
             generate() {
                 const patterns = [
-                    () => this.randomChoice(this.prefixes) + ' ' + this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
-                    () => this.randomChoice(this.founderNames) + ' & ' + this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.suffixes),
-                    () => this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
-                    () => this.randomChoice(this.cores) + ' ' + this.randomChoice(this.suffixes),
-                    () => this.randomChoice(this.founderNames) + ' ' + this.randomChoice(this.suffixes)
+                    () => this.randomChoice(this.qualityPrefixes) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.geographicPrefixes) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.techPrefixes) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ' & ' + this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ', ' + this.randomChoice(this.surnames) + ' & ' + this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.cityNames) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.qualityPrefixes) + ' ' + this.randomChoice(this.geographicPrefixes) + ' ' + this.randomChoice(this.industryBases),
+                    () => this.randomChoice(this.techPrefixes) + ' ' + this.randomChoice(this.geographicPrefixes) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.numericSuffixes) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.generateAcronym(3) + ' ' + this.randomChoice(this.industryBases),
+                    () => this.randomChoice(this.qualityPrefixes) + ' ' + this.randomChoice(this.techPrefixes) + ' ' + this.randomChoice(this.industryBases),
+                    () => this.randomChoice(this.geographicPrefixes) + ' ' + this.randomChoice(this.cityNames) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.geographicPrefixes) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.qualityPrefixes) + ' ' + this.randomChoice(this.techPrefixes) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.techPrefixes) + ' ' + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.qualityPrefixes),
+                    () => this.randomChoice(this.techPrefixes) + this.randomChoice(this.industryBases) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + this.randomChoice(this.numericSuffixes) + ' ' + this.randomChoice(this.companySuffixes),
+                    () => this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.surnames) + ' ' + this.randomChoice(this.industryBases)
                 ];
                 
-                const pattern = this.randomChoice(patterns);
-                return pattern();
+                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                let companyName = pattern();
+                
+                if (Math.random() < 0.15) {
+                    companyName = companyName.replace(/ (Inc|Corp|LLC|Ltd|Co)$/, ' ' + (Math.floor(Math.random() * 999) + 1) + ' $1');
+                }
+                if (Math.random() < 0.05) {
+                    companyName += ' of ' + this.randomChoice(this.cityNames);
+                }
+
+                return companyName;
+            },
+            
+            generateAcronym(length) {
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                let acronym = '';
+                for (let i = 0; i < length; i++) {
+                    acronym += letters[Math.floor(Math.random() * letters.length)];
+                }
+                return acronym;
             },
             
             randomChoice(array) {
@@ -696,266 +760,104 @@
             }
         };
 
-        // 真实的城市-邮编数据库（基于真实数据）
-        const REAL_ADDRESSES = {
-            'NY': {
-                'New York': {
-                    zipCodes: ['10001', '10002', '10003', '10009', '10010', '10011', '10012', '10013', '10014', '10016', '10017', '10018', '10019', '10020', '10021', '10022', '10023', '10024', '10025', '10026', '10027', '10028', '10029', '10030'],
-                    realStreets: ['Broadway', 'Fifth Avenue', 'Park Avenue', 'Madison Avenue', 'Lexington Avenue', 'Third Avenue', 'Second Avenue', 'First Avenue', 'Avenue A', 'Avenue B', 'West 23rd Street', 'East 14th Street', 'Wall Street', 'Canal Street', 'Houston Street', 'Bleecker Street', 'Spring Street', 'Prince Street', 'Grand Street', 'Delancey Street']
-                },
-                'Buffalo': {
-                    zipCodes: ['14201', '14202', '14203', '14204', '14206', '14207', '14208', '14209', '14210', '14211', '14212', '14213', '14214', '14215', '14216', '14217', '14218', '14219', '14220', '14221'],
-                    realStreets: ['Main Street', 'Elmwood Avenue', 'Delaware Avenue', 'Hertel Avenue', 'West Ferry Street', 'East Ferry Street', 'Forest Avenue', 'Grant Street', 'Lafayette Avenue', 'Niagara Street', 'Bailey Avenue', 'Genesee Street', 'William Street', 'Pearl Street', 'Church Street']
-                },
-                'Albany': {
-                    zipCodes: ['12201', '12202', '12203', '12204', '12205', '12206', '12207', '12208', '12209', '12210', '12211', '12212', '12214', '12220', '12222', '12223', '12224', '12225', '12226', '12227'],
-                    realStreets: ['State Street', 'Central Avenue', 'Western Avenue', 'Washington Avenue', 'Madison Avenue', 'Lark Street', 'Pearl Street', 'Broadway', 'Delaware Avenue', 'New Scotland Avenue', 'Quail Street', 'Manning Boulevard', 'Krumkill Road', 'Wolf Road', 'Colvin Avenue']
+        const GeoData = {
+            ssnAreaNumbers: { 'AL': ['416-424'], 'AK': ['574'], 'AZ': ['526-527', '600-601'], 'AR': ['429-432'], 'CA': ['528-529', '545-563', '602-626'], 'CO': ['521-524'], 'CT': ['040-049'], 'DE': ['221-222'], 'FL': ['261-267', '589-595'], 'GA': ['252-260'], 'HI': ['575-576'], 'ID': ['518-519'], 'IL': ['318-361'], 'IN': ['303-317'], 'IA': ['478-485'], 'KS': ['509-517'], 'KY': ['400-407'], 'LA': ['433-439'], 'ME': ['001-003'], 'MD': ['223-231'], 'MA': ['004-007', '010-034'], 'MI': ['362-386'], 'MN': ['468-477'], 'MS': ['425-428'], 'MO': ['486-500'], 'MT': ['518-519'], 'NE': ['503-508'], 'NV': ['528-529', '544'], 'NH': ['001-003'], 'NJ': ['135-158'], 'NM': ['525', '585'], 'NY': ['050-134'], 'NC': ['237-246'], 'ND': ['501-502'], 'OH': ['268-302'], 'OK': ['440-448'], 'OR': ['540-544'], 'PA': ['159-211'], 'RI': ['008-009'], 'SC': ['247-251'], 'SD': ['503-508'], 'TN': ['408-415'], 'TX': ['449-467', '586'], 'UT': ['528-529', '680'], 'VT': ['001-003'], 'VA': ['232-236'], 'WA': ['531-539'], 'WV': ['232-236'], 'WI': ['387-399'], 'WY': ['520'] },
+            phoneAreaCodes: { 'AL': ['205', '251', '256', '334', '938'], 'AK': ['907'], 'AZ': ['480', '520', '602', '623', '928'], 'AR': ['479', '501', '870'], 'CA': ['209', '213', '310', '323', '408', '415', '424', '442', '510', '530', '559', '562', '619', '626', '628', '650', '661', '707', '714', '747', '760', '805', '818', '820', '831', '858', '909', '916', '925', '949', '951'], 'CO': ['303', '719', '720', '970'], 'CT': ['203', '475', '860', '959'], 'DE': ['302'], 'FL': ['239', '305', '321', '352', '386', '407', '561', '727', '754', '772', '786', '813', '850', '863', '904', '941', '954'], 'GA': ['229', '404', '470', '478', '678', '706', '762', '770', '912'], 'HI': ['808'], 'ID': ['208', '986'], 'IL': ['217', '224', '309', '312', '331', '618', '630', '708', '773', '779', '815', '847', '872'], 'IN': ['219', '260', '317', '463', '574', '765', '812', '930'], 'IA': ['319', '515', '563', '641', '712'], 'KS': ['316', '620', '785', '913'], 'KY': ['270', '364', '502', '606', '859'], 'LA': ['225', '318', '337', '504', '985'], 'ME': ['207'], 'MD': ['240', '301', '410', '443', '667'], 'MA': ['339', '351', '413', '508', '617', '774', '781', '857', '978'], 'MI': ['231', '248', '269', '313', '517', '586', '616', '734', '810', '906', '947', '989'], 'MN': ['218', '320', '507', '612', '651', '763', '952'], 'MS': ['228', '601', '662', '769'], 'MO': ['314', '417', '573', '636', '660', '816'], 'MT': ['406'], 'NE': ['308', '402', '531'], 'NV': ['702', '725', '775'], 'NH': ['603'], 'NJ': ['201', '551', '609', '640', '732', '848', '856', '862', '908', '973'], 'NM': ['505', '575'], 'NY': ['212', '315', '332', '347', '516', '518', '585', '607', '631', '646', '716', '718', '838', '845', '914', '917', '929', '934'], 'NC': ['252', '336', '704', '743', '828', '910', '919', '980', '984'], 'ND': ['701'], 'OH': ['216', '220', '234', '330', '380', '419', '440', '513', '567', '614', '740', '937'], 'OK': ['405', '539', '580', '918'], 'OR': ['458', '503', '541', '971'], 'PA': ['215', '223', '267', '272', '412', '484', '570', '610', '717', '724', '814', '878'], 'RI': ['401'], 'SC': ['803', '839', '843', '854', '864'], 'SD': ['605'], 'TN': ['423', '615', '629', '731', '865', '901', '931'], 'TX': ['210', '214', '254', '281', '325', '346', '361', '409', '430', '432', '469', '512', '682', '713', '726', '737', '806', '817', '830', '832', '903', '915', '936', '940', '956', '972', '979'], 'UT': ['385', '435', '801'], 'VT': ['802'], 'VA': ['276', '434', '540', '571', '703', '757', '804'], 'WA': ['206', '253', '360', '425', '509', '564'], 'WV': ['304', '681'], 'WI': ['262', '414', '534', '608', '715', '920'], 'WY': ['307'] },
+            
+            generateSsn(state) {
+                const ranges = this.ssnAreaNumbers[state];
+                if (!ranges) return faker.random.arrayElement(['201', '301', '401', '501']) + '-' + faker.datatype.number({min: 10, max: 99}) + '-' + faker.datatype.number({min: 1000, max: 9999});
+
+                const rangeStr = faker.random.arrayElement(ranges);
+                let area;
+                if (rangeStr.includes('-')) {
+                    const [start, end] = rangeStr.split('-').map(Number);
+                    area = faker.datatype.number({ min: start, max: end });
+                } else {
+                    area = Number(rangeStr);
                 }
+                
+                const group = faker.datatype.number({ min: 1, max: 99 });
+                const serial = faker.datatype.number({ min: 1, max: 9999 });
+
+                return `${String(area).padStart(3, '0')}-${String(group).padStart(2, '0')}-${String(serial).padStart(4, '0')}`;
             },
-            'CA': {
-                'Los Angeles': {
-                    zipCodes: ['90001', '90002', '90003', '90004', '90005', '90006', '90007', '90008', '90010', '90011', '90012', '90013', '90014', '90015', '90016', '90017', '90018', '90019', '90020', '90021', '90022', '90023', '90024', '90025'],
-                    realStreets: ['Sunset Boulevard', 'Hollywood Boulevard', 'Wilshire Boulevard', 'Santa Monica Boulevard', 'Melrose Avenue', 'Beverly Boulevard', 'Pico Boulevard', 'Olympic Boulevard', 'Venice Boulevard', 'Washington Boulevard', 'Adams Boulevard', 'Jefferson Boulevard', 'Exposition Boulevard', 'Martin Luther King Jr Boulevard', 'Slauson Avenue']
-                },
-                'San Francisco': {
-                    zipCodes: ['94102', '94103', '94104', '94105', '94107', '94108', '94109', '94110', '94111', '94112', '94114', '94115', '94116', '94117', '94118', '94121', '94122', '94123', '94124', '94127'],
-                    realStreets: ['Market Street', 'Mission Street', 'Van Ness Avenue', 'Geary Boulevard', 'Powell Street', 'Montgomery Street', 'California Street', 'Pine Street', 'Bush Street', 'Sutter Street', 'Post Street', 'Grant Avenue', 'Stockton Street', 'Kearny Street', 'Columbus Avenue']
-                }
-            },
-            'TX': {
-                'Houston': {
-                    zipCodes: ['77001', '77002', '77003', '77004', '77005', '77006', '77007', '77008', '77009', '77010', '77011', '77012', '77013', '77014', '77015', '77016', '77017', '77018', '77019', '77020'],
-                    realStreets: ['Main Street', 'Texas Avenue', 'Louisiana Street', 'Smith Street', 'Travis Street', 'Milam Street', 'San Jacinto Street', 'Fannin Street', 'Austin Street', 'Caroline Street', 'Chenevert Street', 'Hamilton Street', 'Hutchins Street', 'Jackson Street', 'Jefferson Street']
-                },
-                'Dallas': {
-                    zipCodes: ['75201', '75202', '75203', '75204', '75205', '75206', '75207', '75208', '75209', '75210', '75211', '75212', '75214', '75215', '75216', '75217', '75218', '75219', '75220', '75223'],
-                    realStreets: ['Main Street', 'Elm Street', 'Commerce Street', 'Jackson Street', 'Wood Street', 'Young Street', 'Ervay Street', 'St. Paul Street', 'Harwood Street', 'Live Oak Street', 'Pearl Street', 'Bryan Street', 'McKinney Avenue', 'Ross Avenue', 'Canton Street']
-                },
-                'Austin': {
-                    zipCodes: ['78701', '78702', '78703', '78704', '78705', '78712', '78717', '78719', '78721', '78722', '78723', '78724', '78725', '78726', '78727', '78728', '78729', '78731', '78732', '78733'],
-                    realStreets: ['Congress Avenue', 'Lamar Boulevard', 'MoPac Expressway', 'I-35', 'Guadalupe Street', 'Red River Street', 'Brazos Street', 'Colorado Street', 'Lavaca Street', 'Nueces Street', 'Rio Grande Street', 'West Avenue', 'Shoal Creek Boulevard', 'Burnet Road', 'Airport Boulevard']
-                },
-                'San Antonio': {
-                    zipCodes: ['78201', '78202', '78203', '78204', '78205', '78207', '78208', '78209', '78210', '78211', '78212', '78213', '78214', '78215', '78216', '78217', '78218', '78219', '78220', '78221'],
-                    realStreets: ['Commerce Street', 'Market Street', 'Houston Street', 'San Pedro Avenue', 'Broadway', 'McCullough Avenue', 'New Braunfels Avenue', 'Gevers Street', 'South Alamo Street', 'South St. Marys Street', 'Guadalupe Street', 'Blanco Road', 'West Avenue', 'Fredericksburg Road', 'Bandera Road']
-                },
-                'Laredo': {
-                    zipCodes: ['78040', '78041', '78042', '78043', '78044', '78045', '78046'],
-                    realStreets: ['San Bernardo Avenue', 'McPherson Road', 'Zapata Highway', 'Santa Ursula Avenue', 'Shiloh Drive', 'Del Mar Boulevard', 'Loop 20', 'Saunders Street', 'Hillside Road', 'Bob Bullock Loop', 'Callaghan Road', 'Victoria Street', 'Washington Street', 'Matamoros Street', 'Iturbide Street']
-                },
-                'El Paso': {
-                    zipCodes: ['79901', '79902', '79903', '79904', '79905', '79906', '79907', '79908', '79910', '79911', '79912', '79913', '79914', '79915', '79916', '79917', '79918', '79922', '79924', '79925'],
-                    realStreets: ['Mesa Street', 'Paisano Drive', 'Montana Avenue', 'Dyer Street', 'Piedras Street', 'Alameda Avenue', 'Yandell Drive', 'Rio Grande Avenue', 'Magoffin Avenue', 'Campbell Street', 'Stanton Street', 'Santa Fe Street', 'El Paso Street', 'San Antonio Avenue', 'Octavia Street']
-                }
-            },
-            'FL': {
-                'Miami': {
-                    zipCodes: ['33101', '33102', '33109', '33111', '33112', '33114', '33116', '33119', '33122', '33124', '33125', '33126', '33127', '33128', '33129', '33130', '33131', '33132', '33133', '33134'],
-                    realStreets: ['Biscayne Boulevard', 'Collins Avenue', 'Ocean Drive', 'Washington Avenue', 'Lincoln Road', 'Alton Road', 'Indian Creek Drive', 'Bay Road', 'Meridian Avenue', 'Pennsylvania Avenue', 'Euclid Avenue', 'Jefferson Avenue', 'Michigan Avenue', 'Lenox Avenue', 'Sheridan Avenue']
-                }
-            },
-            'IL': {
-                'Chicago': {
-                    zipCodes: ['60601', '60602', '60603', '60604', '60605', '60606', '60607', '60608', '60609', '60610', '60611', '60612', '60613', '60614', '60615', '60616', '60617', '60618', '60619', '60620'],
-                    realStreets: ['Michigan Avenue', 'State Street', 'Wabash Avenue', 'Wells Street', 'LaSalle Street', 'Clark Street', 'Dearborn Street', 'Franklin Street', 'Canal Street', 'Jefferson Street', 'Des Plaines Street', 'Halsted Street', 'Green Street', 'Peoria Street', 'Morgan Street']
-                }
-            },
-            'GA': {
-                'Atlanta': {
-                    zipCodes: ['30301', '30302', '30303', '30304', '30305', '30306', '30307', '30308', '30309', '30310', '30311', '30312', '30313', '30314', '30315', '30316', '30317', '30318', '30319', '30320'],
-                    realStreets: ['Peachtree Street', 'Spring Street', 'West Peachtree Street', 'Piedmont Avenue', 'Juniper Street', 'Courtland Street', 'Boulevard', 'Memorial Drive', 'DeKalb Avenue', 'Auburn Avenue', 'Edgewood Avenue', 'North Avenue', 'Ponce de Leon Avenue', 'Monroe Drive', 'Virginia Avenue']
-                },
-                'Athens': {
-                    zipCodes: ['30601', '30602', '30605', '30606', '30607', '30608', '30609'],
-                    realStreets: ['Broad Street', 'Prince Avenue', 'Milledge Avenue', 'Baxter Street', 'Lumpkin Street', 'Jackson Street', 'Thomas Street', 'Oglethorpe Avenue', 'Dougherty Street', 'Cedar Street', 'Pulaski Street', 'Hancock Avenue', 'Alps Road', 'Epps Bridge Parkway', 'Atlanta Highway']
-                }
-            },
-            'NC': {
-                'Charlotte': {
-                    zipCodes: ['28201', '28202', '28203', '28204', '28205', '28206', '28207', '28208', '28209', '28210', '28211', '28212', '28213', '28214', '28215', '28216', '28217', '28223', '28226', '28227'],
-                    realStreets: ['Trade Street', 'Tryon Street', 'Church Street', 'College Street', 'Davidson Street', 'Mint Street', 'Cedar Street', 'Pine Street', 'Poplar Street', 'Brevard Street', 'Carson Boulevard', 'Freedom Drive', 'Independence Boulevard', 'Providence Road', 'Park Road']
-                },
-                'Asheville': {
-                    zipCodes: ['28801', '28802', '28803', '28804', '28805', '28806'],
-                    realStreets: ['Patton Avenue', 'Haywood Street', 'College Street', 'Broadway Street', 'Biltmore Avenue', 'Charlotte Street', 'Church Street', 'Woodfin Street', 'Merrimon Avenue', 'Hendersonville Road', 'Airport Road', 'Tunnel Road', 'Asheland Avenue', 'Leicester Highway', 'Swannanoa River Road']
-                }
+
+            generatePhone(state) {
+                const areaCodes = this.phoneAreaCodes[state];
+                if (!areaCodes) return faker.phone.phoneNumber('(###) ###-####');
+                const areaCode = faker.random.arrayElement(areaCodes);
+                return `(${areaCode}) ${faker.datatype.number({min: 200, max: 999})}-${faker.datatype.number({min: 1000, max: 9999})}`;
             }
         };
 
-        // 常见的真实街道名称（用于未在数据库中的城市）
-        const REAL_STREET_NAMES = [
-            'Main Street', 'First Street', 'Second Street', 'Third Street', 'Fourth Street', 'Fifth Street',
-            'Park Avenue', 'Oak Street', 'Pine Street', 'Maple Street', 'Cedar Street', 'Elm Street',
-            'Washington Street', 'Lincoln Avenue', 'Jefferson Street', 'Madison Avenue', 'Monroe Street',
-            'Adams Street', 'Jackson Street', 'Harrison Street', 'Tyler Street', 'Taylor Street',
-            'Church Street', 'School Street', 'Mill Street', 'Water Street', 'High Street', 'Hill Street',
-            'Spring Street', 'Valley Road', 'Ridge Road', 'Sunset Drive', 'Sunrise Avenue', 'Garden Street',
-            'Forest Avenue', 'Lake Street', 'River Road', 'Creek Drive', 'Meadow Lane', 'Grove Street'
-        ];
+        const STATE_CITY_ZIP_DATA = { "AL": { "Birmingham": ["35203", "35204", "35205"], "Montgomery": ["36104", "36105", "36106"], "Mobile": ["36602", "36603", "36604"] }, "AK": { "Anchorage": ["99501", "99502", "99503"], "Fairbanks": ["99701", "99709"], "Juneau": ["99801"] }, "AZ": { "Phoenix": ["85001", "85003", "85004"], "Tucson": ["85701", "85705"], "Mesa": ["85201", '85202'] }, "AR": { "Little Rock": ["72201", "72202"], "Fort Smith": ["72901", "72903"], "Fayetteville": ["72701", "72703"] }, "CA": { "Los Angeles": ["90001", "90002", "90003"], "San Diego": ["92101", "92102"], "San Jose": ["95110", "95111"] }, "CO": { "Denver": ["80202", "80203", "80204"], "Colorado Springs": ["80903", "80904"], "Aurora": ["80010", "80011"] }, "CT": { "Bridgeport": ["06604", "06605"], "New Haven": ["06510", "06511"], "Stamford": ["06901", "06902"] }, "DE": { "Wilmington": ["19801", "19802"], "Dover": ["19901", "19904"] }, "FL": { "Jacksonville": ["32202", "32204"], "Miami": ["33125", "33126"], "Tampa": ["33602", "33603"] }, "GA": { "Atlanta": ["30303", "30305"], "Augusta": ["30901", "30904"], "Columbus": ["31901", "31903"] }, "HI": { "Honolulu": ["96813", "96814", "96815"] }, "ID": { "Boise": ["83702", "83703"], "Meridian": ["83642", "83646"] }, "IL": { "Chicago": ["60601", "60602", "60603"], "Aurora": ["60502", "60503"], "Rockford": ["61101", "61102"] }, "IN": { "Indianapolis": ["46201", "46202"], "Fort Wayne": ["46802", "46803"] }, "IA": { "Des Moines": ["50309", "50310"], "Cedar Rapids": ["52402", "52403"] }, "KS": { "Wichita": ["67202", "67203"], "Overland Park": ["66204", "66207"] }, "KY": { "Louisville": ["40202", "40203"], "Lexington": ["40502", "40503"] }, "LA": { "New Orleans": ["70112", "70113"], "Baton Rouge": ["70801", "70802"] }, "ME": { "Portland": ["04101", "04102"], "Lewiston": ["04240"] }, "MD": { "Baltimore": ["21201", "21202"], "Frederick": ["21701", "21702"] }, "MA": { "Boston": ["02108", "02109", "02110"], "Worcester": ["01602", "01603"], "Springfield": ["01103", "01104"] }, "MI": { "Detroit": ["48201", "48202"], "Grand Rapids": ["49503", "49504"] }, "MN": { "Minneapolis": ["55401", "55402"], "Saint Paul": ["55101", "55102"] }, "MS": { "Jackson": ["39201", "39202"], "Gulfport": ["39501", "39503"] }, "MO": { "Kansas City": ["64105", "64106"], "Saint Louis": ["63101", "63102"] }, "MT": { "Billings": ["59101", "59102"], "Missoula": ["59801", "59802"] }, "NE": { "Omaha": ["68102", "68104"], "Lincoln": ["68508", "68510"] }, "NV": { "Las Vegas": ["89101", "89102"], "Henderson": ["89002", "89011"] }, "NH": { "Manchester": ["03101", "03102"], "Nashua": ["03060", "03061"] }, "NJ": { "Newark": ["07102", "07103"], "Jersey City": ["07302", '07304'] }, "NM": { "Albuquerque": ["87102", "87104"], "Las Cruces": ["88001", "88005"] }, "NY": { "New York": ["10001", "10002", "10003"], "Buffalo": ["14201", "14202"], "Rochester": ["14604", "14605"] }, "NC": { "Charlotte": ["28202", "28204"], "Raleigh": ["27601", "27603"] }, "ND": { "Fargo": ["58102", "58103"], "Bismarck": ["58501", "58503"] }, "OH": { "Columbus": ["43215", "43216"], "Cleveland": ["44113", "44114"] }, "OK": { "Oklahoma City": ["73102", "73103"], "Tulsa": ["74103", "74104"] }, "OR": { "Portland": ["97201", "97204"], "Salem": ["97301", "97302"] }, "PA": { "Philadelphia": ["19102", "19103", "19104"], "Pittsburgh": ["15219", "15222"] }, "RI": { "Providence": ["02903", "02904"], "Cranston": ["02910", "02920"] }, "SC": { "Charleston": ["29401", "29403"], "Columbia": ["29201", "29202"] }, "SD": { "Sioux Falls": ["57103", "57104"], "Rapid City": ["57701", "57702"] }, "TN": { "Nashville": ["37201", "37203"], "Memphis": ["38103", "38104"] }, "TX": { "Houston": ["77002", "77003"], "San Antonio": ["78205", "78207"], "Dallas": ["75201", "75202"] }, "UT": { "Salt Lake City": ["84101", "84111"], "West Valley City": ["84119", "84120"] }, "VT": { "Burlington": ["05401", "05408"], "South Burlington": ["05403", "05407"] }, "VA": { "Virginia Beach": ["23451", "23452"], "Norfolk": ["23502", "23503"] }, "WA": { "Seattle": ["98101", "98104", "98121"], "Spokane": ["99201", "99202"] }, "WV": { "Charleston": ["25301", "25302"], "Huntington": ["25701", "25702"] }, "WI": { "Milwaukee": ["53202", "53203"], "Madison": ["53703", "53704"] }, "WY": { "Cheyenne": ["82001", "82009"], "Casper": ["82601", "82604"] } };
+        const REAL_STREET_NAMES = [ 'Main', 'Oak', 'First', 'Pine', 'Maple', 'Cedar', 'Elm', 'Washington', 'Lake', 'Hill', 'Park', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'Adams', 'Broad', 'Center', 'Church', 'Clark', 'Court', 'Dogwood', 'Franklin', 'Green', 'Harrison', 'Highland', 'Jackson', 'Jefferson', 'Lafayette', 'Liberty', 'Lincoln', 'Madison', 'Monroe', 'North', 'Railroad', 'Ridge', 'River', 'School', 'South', 'Spring', 'State', 'Union', 'Walnut', 'Water', 'West', 'Willow', 'Wilson', 'Academy', 'Airport', 'Ashley', 'Baker', 'Bank', 'Bay', 'Beach', 'Bell', 'Beverly', 'Birch', 'Bridge', 'Broadway', 'Brook', 'Brown', 'Buckingham', 'Cambridge', 'Canyon', 'Carter', 'Cherry', 'Chestnut', 'Circle', 'Clay', 'Cleveland', 'Clinton', 'Colonial', 'Columbia', 'Congress', 'Cooper', 'Country Club', 'Creek', 'Crestview', 'Cross', 'Davis', 'Delaware', 'Depot', 'Division', 'Douglas', 'East', 'Edgewood', 'Elizabeth', 'Essex', 'Euclid', 'Evergreen', 'Fairview', 'Farm', 'Field', 'Forest', 'Franklin', 'Front', 'Garden', 'George', 'Glenwood', 'Grant', 'Grove', 'Hamilton', 'Hancock', 'Harris', 'Harrison', 'Harvard', 'Hawthorne', 'Heather', 'Henry', 'Hickory', 'High', 'Hillcrest', 'Hillside', 'Holly', 'Howard', 'Hudson', 'Indian', 'Jackson', 'James', 'Jefferson', 'John', 'Johnson', 'Jones', 'King', 'Lakeview', 'Laurel', 'Lawrence', 'Lee', 'Lexington', 'Locust', 'Magnolia', 'Manor', 'Market', 'Marshall', 'Martin', 'McKinley', 'Meadow', 'Mechanic', 'Middle', 'Mill', 'Miller', 'Monroe', 'Morgan', 'Morris', 'Mountain', 'Myrtle', 'New', 'Oakland', 'Orange', 'Oxford', 'Parkway', 'Pearl', 'Pennsylvania', 'Pleasant', 'Prospect', 'Queen', 'Randolph', 'Richmond', 'Roosevelt', 'Rose', 'Russell', 'Saint Pauls', 'Salem', 'Scott', 'Shadow', 'Sherman', 'Smith', 'Spruce', 'Stanley', 'Summit', 'Sunset', 'Sycamore', 'Taylor', 'Thomas', 'Thompson', 'Valley', 'Victoria', 'Vine', 'Virginia', 'Warren', 'Waverly', 'Webster', 'Williams', 'Windsor', 'Woodland', 'Wright', 'York' ];
+        const STREET_SUFFIXES = ['St', 'Ave', 'Blvd', 'Rd', 'Dr', 'Ln', 'Ct', 'Pl', 'Way', 'Ter', 'Cir', 'Pkwy', 'Plz', 'Sq'];
 
-        // 州-城市映射（扩展版）
-        const STATE_CITIES = {
-            'NY': ['New York', 'Buffalo', 'Rochester', 'Yonkers', 'Syracuse', 'Albany', 'New Rochelle', 'Mount Vernon', 'Schenectady', 'Utica'],
-            'CA': ['Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento', 'Long Beach', 'Oakland', 'Bakersfield', 'Anaheim'],
-            'TX': ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso', 'Arlington', 'Corpus Christi', 'Plano', 'Laredo'],
-            'FL': ['Jacksonville', 'Miami', 'Tampa', 'Orlando', 'St. Petersburg', 'Hialeah', 'Tallahassee', 'Fort Lauderdale', 'Port St. Lucie', 'Cape Coral'],
-            'IL': ['Chicago', 'Aurora', 'Rockford', 'Joliet', 'Naperville', 'Springfield', 'Peoria', 'Elgin', 'Waukegan', 'Cicero'],
-            'PA': ['Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading', 'Scranton', 'Bethlehem', 'Lancaster', 'Harrisburg', 'Altoona'],
-            'OH': ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton', 'Youngstown', 'Parma', 'Canton', 'Lorain'],
-            'GA': ['Atlanta', 'Augusta', 'Columbus', 'Macon', 'Savannah', 'Athens', 'Sandy Springs', 'Roswell', 'Albany', 'Marietta'],
-            'NC': ['Charlotte', 'Raleigh', 'Greensboro', 'Durham', 'Winston-Salem', 'Fayetteville', 'Cary', 'Wilmington', 'High Point', 'Asheville'],
-            'MI': ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Lansing', 'Ann Arbor', 'Flint', 'Dearborn', 'Livonia', 'Westland']
-        };
-
-        // 生成真实地址的函数
         function generateRealAddress(selectedState, selectedCity) {
             let state, city, zipCode, streetName;
             
             if (selectedState && selectedCity) {
                 state = selectedState;
                 city = selectedCity;
+                const cityData = STATE_CITY_ZIP_DATA[state]?.[city];
+                zipCode = cityData ? faker.random.arrayElement(cityData) : faker.address.zipCodeByState(state);
             } else if (selectedState) {
                 state = selectedState;
-                const cities = STATE_CITIES[state] || ['Unknown City'];
-                city = cities[Math.floor(Math.random() * cities.length)];
+                const cities = Object.keys(STATE_CITY_ZIP_DATA[state] || {});
+                city = faker.random.arrayElement(cities);
+                const cityData = STATE_CITY_ZIP_DATA[state]?.[city];
+                zipCode = cityData ? faker.random.arrayElement(cityData) : faker.address.zipCodeByState(state);
             } else {
-                const states = Object.keys(STATE_CITIES);
-                state = states[Math.floor(Math.random() * states.length)];
-                const cities = STATE_CITIES[state];
-                city = cities[Math.floor(Math.random() * cities.length)];
+                const states = Object.keys(STATE_CITY_ZIP_DATA);
+                state = faker.random.arrayElement(states);
+                const cities = Object.keys(STATE_CITY_ZIP_DATA[state]);
+                city = faker.random.arrayElement(cities);
+                const cityData = STATE_CITY_ZIP_DATA[state][city];
+                zipCode = faker.random.arrayElement(cityData);
             }
 
-            // 尝试获取真实地址数据
-            if (REAL_ADDRESSES[state] && REAL_ADDRESSES[state][city]) {
-                const cityData = REAL_ADDRESSES[state][city];
-                zipCode = cityData.zipCodes[Math.floor(Math.random() * cityData.zipCodes.length)];
-                streetName = cityData.realStreets[Math.floor(Math.random() * cityData.realStreets.length)];
-            } else {
-                // 使用通用真实街道名称和模拟邮编
-                streetName = REAL_STREET_NAMES[Math.floor(Math.random() * REAL_STREET_NAMES.length)];
-                // 生成符合该州格式的邮编
-                zipCode = generateStateZipCode(state);
-            }
-
+            streetName = faker.random.arrayElement(REAL_STREET_NAMES) + ' ' + faker.random.arrayElement(STREET_SUFFIXES);
             const streetNumber = Math.floor(Math.random() * 9999) + 1;
             const streetAddress = `${streetNumber} ${streetName}`;
 
-            return {
-                streetAddress,
-                city,
-                state,
-                stateFull: US_STATES[state],
-                zipCode
-            };
-        }
-
-        // 为不同州生成符合格式的邮编
-        function generateStateZipCode(state) {
-            const stateZipRanges = {
-                'NY': () => `1${Math.floor(Math.random() * 5)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'CA': () => `9${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'TX': () => `7${Math.floor(Math.random() * 9)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'FL': () => `3${Math.floor(Math.random() * 4)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'IL': () => `6${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'PA': () => `1${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'OH': () => `4${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'GA': () => `3${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'NC': () => `2${Math.floor(Math.random() * 9)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'MI': () => `4${Math.floor(Math.random() * 3) + 8}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'WA': () => `9${Math.floor(Math.random() * 9) + 8}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'AZ': () => `8${Math.floor(Math.random() * 6)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'MA': () => `0${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'TN': () => `3${Math.floor(Math.random() * 9) + 7}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'IN': () => `4${Math.floor(Math.random() * 8) + 6}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'MO': () => `6${Math.floor(Math.random() * 7) + 3}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'MD': () => `2${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'WI': () => `5${Math.floor(Math.random() * 4)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'MN': () => `5${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'CO': () => `8${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'AL': () => `3${Math.floor(Math.random() * 7) + 5}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'SC': () => `2${Math.floor(Math.random() * 7) + 9}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'LA': () => `7${Math.floor(Math.random() * 2)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'KY': () => `4${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'OR': () => `9${Math.floor(Math.random() * 8) + 7}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'OK': () => `7${Math.floor(Math.random() * 5) + 3}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'CT': () => `0${Math.floor(Math.random() * 3) + 6}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-                'IA': () => `5${Math.floor(Math.random() * 3)}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-            };
-            
-            return stateZipRanges[state] ? stateZipRanges[state]() : `${Math.floor(Math.random() * 90000) + 10000}`;
+            return { streetAddress, city, state, stateFull: US_STATES[state], zipCode };
         }
 
         let currentData = {};
 
-        // 全局快捷键监听
         document.addEventListener('keydown', function(event) {
-            // 只在没有焦点在输入框时才响应快捷键
-            if (document.activeElement.tagName === 'INPUT' || 
-                document.activeElement.tagName === 'SELECT' || 
-                document.activeElement.tagName === 'TEXTAREA') {
-                return;
-            }
-
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
             const key = event.key.toLowerCase();
-            switch (key) {
-                case 'r':
-                    event.preventDefault();
-                    generateAllData();
-                    showToast('数据已重新生成 (快捷键: R)');
-                    break;
-                case 'a':
-                    event.preventDefault();
-                    if (currentData.streetAddress) {
-                        navigator.clipboard.writeText(currentData.streetAddress).then(() => {
-                            showToast('街道地址已复制: ' + currentData.streetAddress);
-                        });
-                    }
-                    break;
-                case 'q':
-                    event.preventDefault();
-                    if (currentData.company) {
-                        navigator.clipboard.writeText(currentData.company).then(() => {
-                            showToast('公司名称已复制: ' + currentData.company);
-                        });
-                    }
-                    break;
-                case 'w':
-                    event.preventDefault();
-                    if (currentData.fullName) {
-                        navigator.clipboard.writeText(currentData.fullName).then(() => {
-                            showToast('用户名称已复制: ' + currentData.fullName);
-                        });
-                    }
-                    break;
-            }
+            if (key === 'r') { event.preventDefault(); generateAllData(); showToast('数据已重新生成 (快捷键: R)'); }
+            if (key === 'a' && currentData.streetAddress) { event.preventDefault(); navigator.clipboard.writeText(currentData.streetAddress).then(() => showToast('街道地址已复制: ' + currentData.streetAddress)); }
+            if (key === 'q' && currentData.company) { event.preventDefault(); navigator.clipboard.writeText(currentData.company).then(() => showToast('公司名称已复制: ' + currentData.company)); }
+            if (key === 'w' && currentData.fullName) { event.preventDefault(); navigator.clipboard.writeText(currentData.fullName).then(() => showToast('用户名称已复制: ' + currentData.fullName)); }
+            if (key === 'e' && currentData.fullAddress) { event.preventDefault(); navigator.clipboard.writeText(currentData.fullAddress).then(() => showToast('完整地址已复制: ' + currentData.fullAddress)); }
         });
 
-        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
             initializeStateFilter();
             generateAllData();
         });
 
-        // 初始化州选择器
         function initializeStateFilter() {
             const stateFilter = document.getElementById('stateFilter');
-            Object.entries(US_STATES).forEach(([code, name]) => {
+            Object.keys(STATE_CITY_ZIP_DATA).forEach(code => {
                 const option = document.createElement('option');
                 option.value = code;
-                option.textContent = name;
+                option.textContent = US_STATES[code];
                 stateFilter.appendChild(option);
             });
         }
 
-        // 更新城市选项
         function updateCityOptions() {
             const stateCode = document.getElementById('stateFilter').value;
             const cityFilter = document.getElementById('cityFilter');
-            
             cityFilter.innerHTML = '<option value="">--- 随机城市 ---</option>';
-            
-            if (stateCode && STATE_CITIES[stateCode]) {
-                STATE_CITIES[stateCode].forEach(city => {
+            if (stateCode && STATE_CITY_ZIP_DATA[stateCode]) {
+                Object.keys(STATE_CITY_ZIP_DATA[stateCode]).forEach(city => {
                     const option = document.createElement('option');
                     option.value = city;
                     option.textContent = city;
@@ -964,123 +866,69 @@
             }
         }
 
-        // 生成所有数据
         function generateAllData() {
             const selectedState = document.getElementById('stateFilter').value;
             const selectedCity = document.getElementById('cityFilter').value;
-
-            // 生成真实地址
+            
+            const nameInfo = NameGenerator.generate();
             const realAddress = generateRealAddress(selectedState, selectedCity);
+            const fullAddress = `${realAddress.streetAddress}, ${realAddress.city}, ${realAddress.state} ${realAddress.zipCode}, USA`;
 
             currentData = {
-                // 基本信息
-                firstName: faker.name.firstName(),
-                lastName: faker.name.lastName(),
-                gender: faker.random.arrayElement(['Male', 'Female']),
-                birthday: faker.date.between('1950-01-01', '2000-12-31').toLocaleDateString('en-US', {
-                    month: 'numeric',
-                    day: 'numeric', 
-                    year: 'numeric'
-                }),
-                prefix: faker.name.prefix(),
-                hairColor: faker.random.arrayElement(['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White']),
-
-                // 地址信息（使用真实数据）
+                firstName: nameInfo.firstName,
+                lastName: nameInfo.lastName,
+                fullName: nameInfo.fullName,
+                gender: nameInfo.gender,
+                birthday: faker.date.between('1950-01-01', '2002-12-31').toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
+                prefix: nameInfo.gender === 'Male' ? faker.random.arrayElement(['Mr.', 'Dr.']) : faker.random.arrayElement(['Mrs.', 'Ms.', 'Miss', 'Dr.']),
+                hairColor: faker.commerce.color(),
                 streetAddress: realAddress.streetAddress,
                 city: realAddress.city,
                 state: realAddress.state,
                 stateFull: realAddress.stateFull,
                 zipCode: realAddress.zipCode,
-                phone: faker.phone.phoneNumber('(###) ###-####'),
-                email: '',
-
-                // 就业信息（使用改进的公司名生成器）
+                fullAddress: fullAddress,
+                phone: GeoData.generatePhone(realAddress.state),
+                email: (nameInfo.firstName + '.' + nameInfo.lastName + '@' + faker.internet.domainName()).toLowerCase(),
                 jobTitle: faker.name.jobTitle(),
-                company: REALISTIC_COMPANY_GENERATOR.generate(),
-                industry: faker.random.arrayElement(['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Sports', 'Entertainment', 'Real Estate', 'Consulting', 'Legal Services', 'Marketing', 'Aerospace', 'Automotive', 'Energy', 'Telecommunications', 'Pharmaceuticals']),
-                companySize: faker.random.arrayElement(['1-10', '11-50', '51-100', '101-500', '501-1000', '1000+']),
-                employmentStatus: faker.random.arrayElement(['Full-time', 'Part-time', 'Contract', 'Freelance', 'Unemployed']),
-                salary: '$' + faker.finance.amount(30000, 150000, 0, ','),
-                ssn: faker.random.arrayElement(['201', '301', '401', '501']) + '-' + faker.datatype.number({min: 10, max: 99}) + '-' + faker.datatype.number({min: 1000, max: 9999}),
-
-                // 信用卡信息
-                cardType: faker.random.arrayElement(['American Express', 'Visa', 'MasterCard', 'Discover']),
+                company: MEGA_COMPANY_GENERATOR.generate(),
+                industry: faker.commerce.department(),
+                companySize: faker.random.arrayElement(['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+']),
+                employmentStatus: faker.random.arrayElement(['Full-time', 'Part-time', 'Contract', 'Freelance', 'Self-employed', 'Intern']),
+                salary: '$' + faker.finance.amount(40000, 250000, 0, ','),
+                ssn: GeoData.generateSsn(realAddress.state),
+                cardType: faker.random.arrayElement(['Visa', 'MasterCard', 'American Express', 'Discover']),
                 cardNumber: faker.finance.creditCardNumber(),
                 cvv: faker.finance.creditCardCVV(),
-                expiry: faker.date.future(5).toLocaleDateString('en-US', {month: 'numeric', year: 'numeric'})
+                expiry: faker.date.future(10).toLocaleDateString('en-US', {month: '2-digit', year: '2-digit'})
             };
-
-            // 生成邮箱
-            currentData.email = (currentData.firstName + '.' + currentData.lastName + '@gmail.com').toLowerCase();
-            currentData.fullName = currentData.firstName + ' ' + currentData.lastName;
-
-            // 更新UI
             updateUI();
         }
 
-        // 更新界面
         function updateUI() {
-            document.getElementById('fullName').textContent = currentData.fullName;
-            document.getElementById('gender').textContent = currentData.gender;
-            document.getElementById('birthday').textContent = currentData.birthday;
-            document.getElementById('prefix').textContent = currentData.prefix;
-            document.getElementById('hairColor').textContent = currentData.hairColor;
-            
-            document.getElementById('streetAddress').textContent = currentData.streetAddress;
-            document.getElementById('city').textContent = currentData.city;
-            document.getElementById('state').textContent = currentData.state;
-            document.getElementById('stateFull').textContent = currentData.stateFull;
-            document.getElementById('zipCode').textContent = currentData.zipCode;
-            document.getElementById('phone').textContent = currentData.phone;
-            document.getElementById('email').textContent = currentData.email;
-            
-            document.getElementById('jobTitle').textContent = currentData.jobTitle;
-            document.getElementById('company').textContent = currentData.company;
-            document.getElementById('industry').textContent = currentData.industry;
-            document.getElementById('companySize').textContent = currentData.companySize;
-            document.getElementById('employmentStatus').textContent = currentData.employmentStatus;
-            document.getElementById('salary').textContent = currentData.salary;
-            document.getElementById('ssn').textContent = currentData.ssn;
-            
-            document.getElementById('cardType').textContent = currentData.cardType;
-            document.getElementById('cardNumber').textContent = currentData.cardNumber;
-            document.getElementById('cvv').textContent = currentData.cvv;
-            document.getElementById('expiry').textContent = currentData.expiry;
-        }
-
-        // 复制文本
-        function copyText(element) {
-            const text = element.querySelector('span:first-child').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('已复制: ' + text);
+            Object.keys(currentData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = currentData[key];
+                }
             });
         }
 
-        // 复制行文本
         function copyRowText(element) {
             const text = element.querySelector('.data-value span:first-child').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('已复制: ' + text);
-            });
+            navigator.clipboard.writeText(text).then(() => showToast('已复制: ' + text));
         }
 
-        // 复制全部数据
         function copyAllData() {
             const allText = Object.entries(currentData).map(([key, value]) => `${key}: ${value}`).join('\n');
-            navigator.clipboard.writeText(allText).then(() => {
-                showToast('全部信息已复制到剪贴板');
-            });
+            navigator.clipboard.writeText(allText).then(() => showToast('全部信息已复制到剪贴板'));
         }
 
-        // 导出JSON
         function exportJSON() {
             const jsonData = JSON.stringify(currentData, null, 2);
-            navigator.clipboard.writeText(jsonData).then(() => {
-                showToast('JSON数据已复制到剪贴板');
-            });
+            navigator.clipboard.writeText(jsonData).then(() => showToast('JSON数据已复制到剪贴板'));
         }
 
-        // 选择城市
         function selectCity(city, state) {
             document.getElementById('stateFilter').value = state;
             updateCityOptions();
@@ -1089,27 +937,21 @@
             document.getElementById('cityDropdown').classList.remove('show');
         }
 
-        // 切换城市下拉菜单
         function toggleCityDropdown() {
-            const dropdown = document.getElementById('cityDropdown');
-            dropdown.classList.toggle('show');
+            document.getElementById('cityDropdown').classList.toggle('show');
         }
 
-        // 显示提示
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // 点击外部关闭下拉菜单
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('cityDropdown');
             const trigger = event.target.closest('h4');
-            if (!dropdown.contains(event.target) && !trigger) {
+            if (dropdown && !dropdown.contains(event.target) && !trigger) {
                 dropdown.classList.remove('show');
             }
         });
