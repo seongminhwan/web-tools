@@ -693,6 +693,7 @@
                 <button class="btn btn-secondary" onclick="app.clearAll()">🗑️ 清空</button>
                 <button class="btn btn-secondary" onclick="app.importWorkflow()">📥 导入</button>
                 <button class="btn btn-secondary" onclick="app.exportWorkflow()">📤 导出</button>
+                <button class="btn btn-secondary" onclick="app.generateShareLink()">🔗 分享</button>
                 <button class="btn btn-success" onclick="app.runWorkflow()">▶️ 运行</button>
             </div>
         </div>
@@ -881,11 +882,18 @@
 
                 // 检查URL参数,自动导入工作流
                 const urlParams = new URLSearchParams(window.location.search);
-                const workflowURL = urlParams.get('workflow') || urlParams.get('url');
-                if (workflowURL) {
+                const workflowParam = urlParams.get('workflow') || urlParams.get('url');
+                if (workflowParam) {
                     // 延迟一点以确保DOM完全加载
                     setTimeout(() => {
-                        this.loadWorkflowFromURL(workflowURL);
+                        // 判断是URL还是base64编码的内容
+                        if (workflowParam.startsWith('http://') || workflowParam.startsWith('https://')) {
+                            // 从URL加载
+                            this.loadWorkflowFromURL(workflowParam);
+                        } else {
+                            // 尝试作为base64解码
+                            this.loadWorkflowFromBase64(workflowParam);
+                        }
                     }, 500);
                 }
             },
@@ -1978,9 +1986,9 @@
                 URL.revokeObjectURL(url);
             },
 
-            exportWorkflow() {
+            getWorkflowData() {
                 const workflowName = document.getElementById('workflow-name').value || '未命名工作流';
-                const data = {
+                return {
                     name: workflowName,
                     nodes: Array.from(this.nodes.values()).map(node => ({
                         ...node,
@@ -1989,17 +1997,86 @@
                     })),
                     connections: this.connections
                 };
+            },
+
+            exportWorkflow() {
+                const data = this.getWorkflowData();
                 const json = JSON.stringify(data, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 // 使用工作流名称作为文件名
-                const filename = `${workflowName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
+                const filename = `${data.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
                 a.href = url;
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
                 this.showToast(`已导出: ${filename}`, 'success');
+            },
+
+            generateShareLink() {
+                try {
+                    const data = this.getWorkflowData();
+                    const json = JSON.stringify(data);
+
+                    // Base64编码
+                    const base64 = btoa(unescape(encodeURIComponent(json)));
+
+                    // 生成分享链接
+                    const baseURL = window.location.origin + window.location.pathname;
+                    const shareLink = `${baseURL}?workflow=${base64}`;
+
+                    // 复制到剪切板
+                    navigator.clipboard.writeText(shareLink).then(() => {
+                        this.showToast('分享链接已复制到剪切板!', 'success');
+
+                        // 显示链接长度信息
+                        const linkLength = shareLink.length;
+                        if (linkLength > 2000) {
+                            setTimeout(() => {
+                                this.showToast(`提示: 链接较长(${linkLength}字符)，建议使用文件导出`, 'info');
+                            }, 2000);
+                        }
+                    }).catch(err => {
+                        // 如果复制失败，显示链接在模态框中
+                        this.showShareLinkModal(shareLink);
+                    });
+                } catch (error) {
+                    this.showToast('生成分享链接失败: ' + error.message, 'error');
+                }
+            },
+
+            showShareLinkModal(link) {
+                const modal = document.createElement('div');
+                modal.className = 'modal show';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title">分享链接</div>
+                            <button class="modal-close" onclick="this.closest('.modal').remove()">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">复制下面的链接进行分享</label>
+                                <textarea class="form-input form-textarea" readonly style="font-size: 11px;">${link}</textarea>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                                链接长度: ${link.length} 字符
+                                ${link.length > 2000 ? '<br><span style="color: var(--apple-orange);">⚠️ 链接较长，某些浏览器可能限制URL长度</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">关闭</button>
+                            <button class="btn btn-primary" onclick="
+                                const textarea = this.closest('.modal').querySelector('textarea');
+                                textarea.select();
+                                document.execCommand('copy');
+                                app.showToast('已复制', 'success');
+                            ">复制链接</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
             },
 
             importWorkflow() {
@@ -2063,6 +2140,26 @@
                 } catch (error) {
                     this.showToast('从URL导入失败: ' + error.message, 'error');
                     console.error('Failed to load workflow from URL:', error);
+                }
+            },
+
+            loadWorkflowFromBase64(base64String) {
+                try {
+                    this.showToast('正在从Base64加载工作流...', 'info');
+
+                    // 解码base64 (对应编码时使用的 btoa(unescape(encodeURIComponent(json))))
+                    // 步骤: atob -> 转换为percent-encoding -> decodeURIComponent
+                    const binaryString = atob(base64String);
+                    const percentEncoded = binaryString.split('').map(c => {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join('');
+                    const jsonString = decodeURIComponent(percentEncoded);
+                    const data = JSON.parse(jsonString);
+
+                    this.loadWorkflowData(data);
+                } catch (error) {
+                    this.showToast('从Base64导入失败: ' + error.message, 'error');
+                    console.error('Failed to load workflow from Base64:', error);
                 }
             },
 
