@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Flow Designer - 数据流工作流设计器</title>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --apple-blue: #007AFF;
+            --apple-green: #34C759;
+            --apple-red: #FF3B30;
+            --apple-purple: #AF52DE;
+            --apple-gray-4: #D1D1D6;
+            --apple-gray-5: #E5E5EA;
+            --apple-gray-6: #F2F2F7;
+            --bg-primary: #F5F5F7;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--apple-gray-5);
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toolbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background: var(--apple-blue); color: white; }
+        .btn-secondary { background: white; color: var(--text-primary); border: 1px solid var(--apple-gray-5); }
+        .btn-success { background: var(--apple-green); color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* 主工作区 */
+        .main-workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 组件库 */
+        .component-library {
+            width: 260px;
+            min-width: 200px;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--apple-gray-5);
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .library-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin: 20px 0 12px 0;
+        }
+
+        .component-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .component-item:hover {
+            transform: translateX(4px);
+            border-color: var(--apple-blue);
+            box-shadow: var(--shadow-md);
+        }
+
+        .component-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .component-item-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 画布 */
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+
+        #canvas {
+            width: 3000px;
+            height: 3000px;
+            background:
+                linear-gradient(90deg, var(--apple-gray-6) 1px, transparent 1px),
+                linear-gradient(var(--apple-gray-6) 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+
+        #svg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: var(--apple-blue);
+            stroke-width: 3px;
+            fill: none;
+            pointer-events: stroke;
+            cursor: pointer;
+        }
+
+        .connection-line:hover {
+            stroke: var(--apple-purple);
+            stroke-width: 4px;
+        }
+
+        .temp-connection-line {
+            stroke: var(--apple-blue);
+            stroke-width: 3px;
+            fill: none;
+            stroke-dasharray: 5, 5;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* 节点 */
+        .workflow-node {
+            position: absolute;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            width: 220px;
+            border: 2px solid transparent;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .workflow-node:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .workflow-node.selected {
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1), var(--shadow-lg);
+        }
+
+        .node-header {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            border-radius: 14px 14px 0 0;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .node-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .node-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .node-action-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .node-action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .node-body {
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            height: 80px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .node-status {
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: var(--apple-gray-4);
+        }
+
+        .node-preview {
+            flex: 1;
+            padding: 8px;
+            background: var(--apple-gray-6);
+            border-radius: 8px;
+            font-family: Monaco, monospace;
+            font-size: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .node-socket {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 3px solid var(--apple-blue);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: crosshair;
+            z-index: 20;
+            transition: all 0.2s;
+        }
+
+        .node-socket:hover {
+            transform: translateY(-50%) scale(1.3);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+        }
+
+        .node-socket.connecting {
+            transform: translateY(-50%) scale(1.5);
+            box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.3); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0.1); }
+        }
+
+        .node-socket.input { left: -8px; }
+        .node-socket.output { right: -8px; }
+
+        /* 节点类型颜色 */
+        .node-input .node-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .node-transform .node-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .node-logic .node-header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .node-loop .node-header { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .node-variable .node-header { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .node-output .node-header { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+        /* 详情面板 */
+        .details-panel {
+            width: 320px;
+            min-width: 250px;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--apple-gray-5);
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        /* 可调整大小的分隔条 */
+        .resizer {
+            width: 4px;
+            background: transparent;
+            cursor: col-resize;
+            position: relative;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .resizer:hover,
+        .resizer.resizing {
+            background: var(--apple-blue);
+        }
+
+        .resizer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -4px;
+            right: -4px;
+            bottom: 0;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .details-section {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .details-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .details-content {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .details-key {
+            font-weight: 600;
+            color: var(--apple-purple);
+            margin-bottom: 4px;
+        }
+
+        .details-value {
+            font-family: Monaco, monospace;
+            background: var(--apple-gray-6);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow: auto;
+        }
+
+        .log-entry {
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: Monaco, monospace;
+        }
+
+        .log-entry.info { background: #e3f2fd; color: #1976d2; }
+        .log-entry.success { background: #e8f5e9; color: #388e3c; }
+        .log-entry.error { background: #ffebee; color: #d32f2f; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        /* JSON Tree Viewer */
+        .json-tree {
+            font-family: Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .json-tree-node {
+            margin-left: 16px;
+        }
+
+        .json-tree-key {
+            color: var(--apple-purple);
+            font-weight: 600;
+        }
+
+        .json-tree-string {
+            color: #22863a;
+        }
+
+        .json-tree-number {
+            color: #005cc5;
+        }
+
+        .json-tree-boolean {
+            color: #d73a49;
+        }
+
+        .json-tree-null {
+            color: #6a737d;
+            font-style: italic;
+        }
+
+        .json-tree-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: var(--apple-blue);
+            font-weight: bold;
+            display: inline-block;
+            width: 14px;
+        }
+
+        .json-tree-toggle:hover {
+            color: var(--apple-purple);
+        }
+
+        .json-tree-collapsed {
+            display: none;
+        }
+
+        .json-tree-type {
+            color: var(--text-secondary);
+            font-size: 11px;
+            margin-left: 6px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--apple-gray-5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: var(--apple-gray-5);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: var(--spacing-lg);
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--apple-gray-5);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .form-group { margin-bottom: var(--spacing-md); }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--apple-gray-4);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            font-family: Monaco, monospace;
+            resize: vertical;
+        }
+
+        .code-editor-container {
+            height: 300px;
+            border: 1px solid var(--apple-gray-4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 2000;
+        }
+
+        .toast.show { display: block; }
+        .toast.success { border-left: 4px solid var(--apple-green); }
+        .toast.error { border-left: 4px solid var(--apple-red); }
+        .toast.info { border-left: 4px solid var(--apple-blue); }
+
+        /* JSON悬浮查看器 */
+        .json-hover-viewer {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid var(--apple-gray-4);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            max-width: 500px;
+            max-height: 400px;
+            overflow: auto;
+            box-shadow: var(--shadow-lg);
+            z-index: 3000;
+            font-family: Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .json-hover-viewer.show {
+            display: block;
+        }
+
+        .json-hover-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--apple-gray-5);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+
+        .json-hover-content {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .json-hover-content .json-key {
+            color: var(--apple-purple);
+            font-weight: 600;
+        }
+
+        .json-hover-content .json-string {
+            color: #22863a;
+        }
+
+        .json-hover-content .json-number {
+            color: #005cc5;
+        }
+
+        .json-hover-content .json-boolean {
+            color: #d73a49;
+        }
+
+        .json-hover-content .json-null {
+            color: #6a737d;
+            font-style: italic;
+        }
+
+        .json-hover-trigger {
+            cursor: help;
+            border-bottom: 1px dashed var(--apple-blue);
+            color: var(--apple-blue);
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .json-hover-trigger:hover {
+            border-bottom-style: solid;
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .json-hover-trigger::after {
+            content: '🔍';
+            margin-left: 4px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="toolbar">
+            <div class="toolbar-title">
+                🎨 Data Flow Designer
+                <input type="text" id="workflow-name" placeholder="未命名工作流" style="margin-left: 12px; padding: 6px 12px; border: 1px solid var(--apple-gray-5); border-radius: 6px; font-size: 14px; width: 200px;">
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn btn-secondary" onclick="app.clearAll()">🗑️ 清空</button>
+                <button class="btn btn-secondary" onclick="app.importWorkflow()">📥 导入</button>
+                <button class="btn btn-secondary" onclick="app.exportWorkflow()">📤 导出</button>
+                <button class="btn btn-success" onclick="app.runWorkflow()">▶️ 运行</button>
+            </div>
+        </div>
+
+        <div class="main-workspace">
+            <div class="component-library" id="component-library">
+                <div class="library-section-title">📝 输入组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('text-input')">
+                    <div class="component-item-name">📄 Text Input</div>
+                    <div class="component-item-desc">文本输入框</div>
+                </div>
+
+                <div class="library-section-title">🔄 转换组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('lines-to-array')">
+                    <div class="component-item-name">📊 Lines to Array</div>
+                    <div class="component-item-desc">按行拆分</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('array-to-lines')">
+                    <div class="component-item-name">📝 Array to Lines</div>
+                    <div class="component-item-desc">合并为文本</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('json-to-lines')">
+                    <div class="component-item-name">📋 JSON to Lines</div>
+                    <div class="component-item-desc">JSON数组转文本</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('regex-replace')">
+                    <div class="component-item-name">🔍 Regex Replace</div>
+                    <div class="component-item-desc">正则替换</div>
+                </div>
+
+                <div class="library-section-title">🔀 逻辑组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('filter')">
+                    <div class="component-item-name">🎯 Filter</div>
+                    <div class="component-item-desc">数组过滤</div>
+                </div>
+
+                <div class="library-section-title">🔁 循环组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('map')">
+                    <div class="component-item-name">🗺️ Map</div>
+                    <div class="component-item-desc">数组映射</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('loop-start')">
+                    <div class="component-item-name">🔄 Loop Start</div>
+                    <div class="component-item-desc">循环开始</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('loop-end')">
+                    <div class="component-item-name">🔚 Loop End</div>
+                    <div class="component-item-desc">循环结束</div>
+                </div>
+
+                <div class="library-section-title">📊 聚合组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('aggregate')">
+                    <div class="component-item-name">📦 Aggregate</div>
+                    <div class="component-item-desc">数据聚合</div>
+                </div>
+
+                <div class="library-section-title">💾 变量组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('set-variable')">
+                    <div class="component-item-name">💾 Set Variable</div>
+                    <div class="component-item-desc">设置变量</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('get-variable')">
+                    <div class="component-item-name">📦 Get Variable</div>
+                    <div class="component-item-desc">获取变量</div>
+                </div>
+
+                <div class="library-section-title">📤 输出组件</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('output')">
+                    <div class="component-item-name">📺 Output</div>
+                    <div class="component-item-desc">结果显示</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('download')">
+                    <div class="component-item-name">💾 Download</div>
+                    <div class="component-item-desc">下载文件</div>
+                </div>
+                <div class="component-item" onclick="app.addNodeAtCenter('copy-to-clipboard')">
+                    <div class="component-item-name">📋 Copy to Clipboard</div>
+                    <div class="component-item-desc">复制到剪切板</div>
+                </div>
+
+                <div class="library-section-title">⚙️ 自定义</div>
+                <div class="component-item" onclick="app.addNodeAtCenter('custom-js')">
+                    <div class="component-item-name">⚡ Custom JS</div>
+                    <div class="component-item-desc">自定义代码</div>
+                </div>
+            </div>
+
+            <div class="resizer" id="left-resizer"></div>
+
+            <div class="canvas-area" id="canvas-area">
+                <div id="canvas">
+                    <svg id="svg-layer"></svg>
+                </div>
+            </div>
+
+            <div class="resizer" id="right-resizer"></div>
+
+            <div class="details-panel" id="details-panel">
+                <div class="panel-title">📊 节点详情</div>
+                <div class="empty-state">
+                    <div class="empty-state-icon">👈</div>
+                    <div>点击节点查看详情</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><span id="toast-message"></span></div>
+
+    <div class="json-hover-viewer" id="json-hover-viewer">
+        <div class="json-hover-header" id="json-hover-header">JSON 数据</div>
+        <div class="json-hover-content" id="json-hover-content"></div>
+    </div>
+
+    <div class="modal" id="config-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">节点配置</div>
+                <button class="modal-close" onclick="app.closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="app.saveConfig()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            nodes: new Map(),
+            connections: [],
+            variables: new Map(),
+            nodeCounter: 0,
+            selectedNode: null,
+            draggedNode: null,
+            connectingFrom: null,
+            tempLine: null,
+            currentConfigNode: null,
+            monacoEditor: null,
+
+            nodeTypes: {
+                'text-input': { name: 'Text Input', category: 'input', icon: '📄' },
+                'lines-to-array': { name: 'Lines to Array', category: 'transform', icon: '📊' },
+                'array-to-lines': { name: 'Array to Lines', category: 'transform', icon: '📝' },
+                'json-to-lines': { name: 'JSON to Lines', category: 'transform', icon: '📋' },
+                'regex-replace': { name: 'Regex Replace', category: 'transform', icon: '🔍' },
+                'filter': { name: 'Filter', category: 'logic', icon: '🎯' },
+                'map': { name: 'Map', category: 'loop', icon: '🗺️' },
+                'loop-start': { name: 'Loop Start', category: 'loop', icon: '🔄' },
+                'loop-end': { name: 'Loop End', category: 'loop', icon: '🔚' },
+                'aggregate': { name: 'Aggregate', category: 'loop', icon: '📦' },
+                'set-variable': { name: 'Set Variable', category: 'variable', icon: '💾' },
+                'get-variable': { name: 'Get Variable', category: 'variable', icon: '📦' },
+                'output': { name: 'Output', category: 'output', icon: '📺' },
+                'download': { name: 'Download', category: 'output', icon: '💾' },
+                'copy-to-clipboard': { name: 'Copy to Clipboard', category: 'output', icon: '📋' },
+                'custom-js': { name: 'Custom JS', category: 'transform', icon: '⚡' }
+            },
+
+            loopContext: null, // 存储当前循环上下文
+
+            init() {
+                this.showToast('编辑器已就绪 - 点击左侧组件添加节点', 'success');
+
+                // 全局鼠标移动事件 - 用于临时连线
+                document.addEventListener('mousemove', (e) => {
+                    if (this.connectingFrom) {
+                        this.updateTempLine(e);
+                    }
+                });
+
+                // 全局鼠标抬起事件 - 清除临时连线
+                document.addEventListener('mouseup', () => {
+                    if (this.connectingFrom) {
+                        this.clearTempLine();
+                        this.connectingFrom = null;
+                    }
+                });
+
+                // 初始化面板大小调整功能
+                this.initResizers();
+
+                // 初始化JSON悬浮查看器
+                this.initJsonHoverViewer();
+
+                // 检查URL参数,自动导入工作流
+                const urlParams = new URLSearchParams(window.location.search);
+                const workflowURL = urlParams.get('workflow') || urlParams.get('url');
+                if (workflowURL) {
+                    // 延迟一点以确保DOM完全加载
+                    setTimeout(() => {
+                        this.loadWorkflowFromURL(workflowURL);
+                    }, 500);
+                }
+            },
+
+            initResizers() {
+                // 左侧分隔条 - 调整组件库宽度
+                const leftResizer = document.getElementById('left-resizer');
+                const componentLibrary = document.getElementById('component-library');
+
+                leftResizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    leftResizer.classList.add('resizing');
+
+                    const startX = e.clientX;
+                    const startWidth = componentLibrary.offsetWidth;
+
+                    const onMouseMove = (e) => {
+                        const delta = e.clientX - startX;
+                        const newWidth = Math.max(200, Math.min(500, startWidth + delta));
+                        componentLibrary.style.width = newWidth + 'px';
+                    };
+
+                    const onMouseUp = () => {
+                        leftResizer.classList.remove('resizing');
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+
+                // 右侧分隔条 - 调整详情面板宽度
+                const rightResizer = document.getElementById('right-resizer');
+                const detailsPanel = document.getElementById('details-panel');
+
+                rightResizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    rightResizer.classList.add('resizing');
+
+                    const startX = e.clientX;
+                    const startWidth = detailsPanel.offsetWidth;
+
+                    const onMouseMove = (e) => {
+                        const delta = startX - e.clientX;
+                        const newWidth = Math.max(250, Math.min(600, startWidth + delta));
+                        detailsPanel.style.width = newWidth + 'px';
+                    };
+
+                    const onMouseUp = () => {
+                        rightResizer.classList.remove('resizing');
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            },
+
+            initJsonHoverViewer() {
+                const viewer = document.getElementById('json-hover-viewer');
+                let currentHoverElement = null;
+
+                // 创建一个辅助函数来检测和包装JSON对象
+                this.wrapJsonValues = (element) => {
+                    const jsonValueClass = 'json-hover-trigger';
+
+                    // 查找所有.details-value元素
+                    element.querySelectorAll('.details-value').forEach(detailsValue => {
+                        // 跳过已经处理过的
+                        if (detailsValue.querySelector(`.${jsonValueClass}`)) return;
+
+                        const text = detailsValue.textContent.trim();
+
+                        // 尝试判断是否是JSON
+                        if ((text.startsWith('{') && text.endsWith('}')) ||
+                            (text.startsWith('[') && text.endsWith(']'))) {
+                            try {
+                                const jsonData = JSON.parse(text);
+
+                                // 包装成可悬浮的元素
+                                const wrapper = document.createElement('span');
+                                wrapper.className = jsonValueClass;
+                                wrapper.textContent = text;
+                                wrapper.dataset.json = JSON.stringify(jsonData, null, 2);
+
+                                detailsValue.innerHTML = '';
+                                detailsValue.appendChild(wrapper);
+
+                                // 添加悬浮事件
+                                wrapper.addEventListener('mouseenter', (e) => {
+                                    currentHoverElement = wrapper;
+                                    const jsonStr = wrapper.dataset.json;
+
+                                    document.getElementById('json-hover-header').textContent = 'JSON 数据预览';
+
+                                    // 应用语法高亮
+                                    const highlighted = this.highlightJson(jsonStr);
+                                    document.getElementById('json-hover-content').innerHTML = highlighted;
+
+                                    // 定位
+                                    const rect = wrapper.getBoundingClientRect();
+                                    viewer.style.left = (rect.left + 10) + 'px';
+                                    viewer.style.top = (rect.bottom + 5) + 'px';
+
+                                    // 确保不超出屏幕
+                                    viewer.classList.add('show');
+                                    const viewerRect = viewer.getBoundingClientRect();
+                                    if (viewerRect.right > window.innerWidth) {
+                                        viewer.style.left = (window.innerWidth - viewerRect.width - 10) + 'px';
+                                    }
+                                    if (viewerRect.bottom > window.innerHeight) {
+                                        viewer.style.top = (rect.top - viewerRect.height - 5) + 'px';
+                                    }
+                                });
+
+                                wrapper.addEventListener('mouseleave', () => {
+                                    setTimeout(() => {
+                                        if (currentHoverElement === wrapper) {
+                                            viewer.classList.remove('show');
+                                            currentHoverElement = null;
+                                        }
+                                    }, 100);
+                                });
+                            } catch (e) {
+                                // 不是有效的JSON,不处理
+                            }
+                        }
+                    });
+                };
+
+                // 在viewer上添加鼠标事件,允许鼠标移到viewer上
+                viewer.addEventListener('mouseenter', () => {
+                    // 保持显示
+                });
+
+                viewer.addEventListener('mouseleave', () => {
+                    viewer.classList.remove('show');
+                    currentHoverElement = null;
+                });
+            },
+
+            addNodeAtCenter(type) {
+                const canvasArea = document.getElementById('canvas-area');
+                const scrollLeft = canvasArea.scrollLeft;
+                const scrollTop = canvasArea.scrollTop;
+                const centerX = scrollLeft + canvasArea.offsetWidth / 2 - 110;
+                const centerY = scrollTop + canvasArea.offsetHeight / 2 - 50 + (this.nodeCounter * 30);
+
+                this.addNode(type, centerX, centerY);
+            },
+
+            addNode(type, x, y) {
+                const id = `node-${++this.nodeCounter}`;
+                const info = this.nodeTypes[type];
+
+                const node = {
+                    id,
+                    type,
+                    position: { x, y },
+                    config: this.getDefaultConfig(type),
+                    inputs: [],
+                    outputs: [],
+                    result: null,
+                    logs: []
+                };
+
+                this.nodes.set(id, node);
+                this.renderNode(node);
+                this.showToast(`已添加 ${info.name}`, 'success');
+            },
+
+            renderNode(node) {
+                const info = this.nodeTypes[node.type];
+                const nodeEl = document.createElement('div');
+                nodeEl.id = node.id;
+                nodeEl.className = `workflow-node node-${info.category}`;
+                nodeEl.style.left = node.position.x + 'px';
+                nodeEl.style.top = node.position.y + 'px';
+
+                nodeEl.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-title">${info.icon} ${info.name}</div>
+                        <div class="node-actions">
+                            <button class="node-action-btn" onclick="event.stopPropagation(); app.openConfig('${node.id}')">⚙️</button>
+                            <button class="node-action-btn" onclick="event.stopPropagation(); app.deleteNode('${node.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="node-body">
+                        <div class="node-status" id="status-${node.id}">等待执行</div>
+                        <div class="node-preview" id="preview-${node.id}">-</div>
+                    </div>
+                    <div class="node-socket input"></div>
+                    <div class="node-socket output"></div>
+                `;
+
+                document.getElementById('canvas').appendChild(nodeEl);
+
+                // 点击节点显示详情
+                nodeEl.addEventListener('click', (e) => {
+                    if (e.target.closest('.node-action-btn')) return;
+                    this.selectNode(node.id);
+                });
+
+                // 拖拽移动
+                const header = nodeEl.querySelector('.node-header');
+                header.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('.node-action-btn')) return;
+                    e.stopPropagation();
+
+                    this.draggedNode = node;
+                    const rect = nodeEl.getBoundingClientRect();
+                    const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+                    const offsetX = e.clientX - rect.left;
+                    const offsetY = e.clientY - rect.top;
+
+                    const onMouseMove = (e) => {
+                        const newX = e.clientX - canvasRect.left - offsetX;
+                        const newY = e.clientY - canvasRect.top - offsetY;
+
+                        node.position.x = newX;
+                        node.position.y = newY;
+                        nodeEl.style.left = newX + 'px';
+                        nodeEl.style.top = newY + 'px';
+
+                        this.renderConnections();
+                        if (this.connectingFrom) {
+                            this.updateTempLine(e);
+                        }
+                    };
+
+                    const onMouseUp = () => {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                        this.draggedNode = null;
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+
+                // 连接点事件
+                const outputSocket = nodeEl.querySelector('.node-socket.output');
+                outputSocket.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    this.connectingFrom = node.id;
+                    outputSocket.classList.add('connecting');
+                    this.createTempLine();
+                });
+
+                const inputSocket = nodeEl.querySelector('.node-socket.input');
+                inputSocket.addEventListener('mouseenter', () => {
+                    if (this.connectingFrom && this.connectingFrom !== node.id) {
+                        inputSocket.style.transform = 'translateY(-50%) scale(1.5)';
+                    }
+                });
+
+                inputSocket.addEventListener('mouseleave', () => {
+                    inputSocket.style.transform = '';
+                });
+
+                inputSocket.addEventListener('mouseup', (e) => {
+                    e.stopPropagation();
+                    if (this.connectingFrom && this.connectingFrom !== node.id) {
+                        this.addConnection(this.connectingFrom, node.id);
+                        this.clearTempLine();
+
+                        // 移除connecting样式
+                        const fromSocket = document.querySelector(`#${this.connectingFrom} .node-socket.output`);
+                        if (fromSocket) fromSocket.classList.remove('connecting');
+
+                        this.connectingFrom = null;
+                    }
+                });
+            },
+
+            createTempLine() {
+                const svg = document.getElementById('svg-layer');
+                this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.tempLine.setAttribute('class', 'temp-connection-line');
+                svg.appendChild(this.tempLine);
+            },
+
+            updateTempLine(e) {
+                if (!this.tempLine || !this.connectingFrom) return;
+
+                const fromEl = document.getElementById(this.connectingFrom);
+                if (!fromEl) return;
+
+                const fromRect = fromEl.getBoundingClientRect();
+                const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+                const x1 = fromRect.right - canvasRect.left;
+                const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                const x2 = e.clientX - canvasRect.left;
+                const y2 = e.clientY - canvasRect.top;
+
+                const dx = x2 - x1;
+                const offset = Math.min(Math.abs(dx) / 2, 100);
+
+                this.tempLine.setAttribute('d', `M ${x1} ${y1} C ${x1 + offset} ${y1}, ${x2 - offset} ${y2}, ${x2} ${y2}`);
+            },
+
+            clearTempLine() {
+                if (this.tempLine) {
+                    this.tempLine.remove();
+                    this.tempLine = null;
+                }
+
+                // 移除所有connecting样式
+                document.querySelectorAll('.node-socket.connecting').forEach(el => {
+                    el.classList.remove('connecting');
+                });
+            },
+
+            addConnection(fromId, toId) {
+                const exists = this.connections.find(c => c.from === fromId && c.to === toId);
+                if (exists) return;
+
+                this.connections.push({ from: fromId, to: toId });
+
+                const fromNode = this.nodes.get(fromId);
+                const toNode = this.nodes.get(toId);
+
+                if (!fromNode.outputs.includes(toId)) fromNode.outputs.push(toId);
+                if (!toNode.inputs.includes(fromId)) toNode.inputs.push(fromId);
+
+                this.renderConnections();
+                this.showToast('连接已创建', 'success');
+            },
+
+            renderConnections() {
+                const svg = document.getElementById('svg-layer');
+                // 清除所有连线（除了临时连线）
+                const tempLine = this.tempLine;
+                svg.innerHTML = '';
+                if (tempLine) {
+                    svg.appendChild(tempLine);
+                }
+
+                this.connections.forEach(conn => {
+                    const fromEl = document.getElementById(conn.from);
+                    const toEl = document.getElementById(conn.to);
+
+                    if (fromEl && toEl) {
+                        const fromRect = fromEl.getBoundingClientRect();
+                        const toRect = toEl.getBoundingClientRect();
+                        const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+                        const x1 = fromRect.right - canvasRect.left;
+                        const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                        const x2 = toRect.left - canvasRect.left;
+                        const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
+
+                        const dx = x2 - x1;
+                        const offset = Math.min(Math.abs(dx) / 2, 100);
+
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', `M ${x1} ${y1} C ${x1 + offset} ${y1}, ${x2 - offset} ${y2}, ${x2} ${y2}`);
+                        path.setAttribute('class', 'connection-line');
+
+                        path.addEventListener('click', () => {
+                            if (confirm('删除此连接?')) {
+                                this.connections = this.connections.filter(c => c !== conn);
+                                this.renderConnections();
+                            }
+                        });
+
+                        svg.appendChild(path);
+                    }
+                });
+            },
+
+            selectNode(nodeId) {
+                // 移除之前的选中状态
+                document.querySelectorAll('.workflow-node.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+
+                // 添加新的选中状态
+                const nodeEl = document.getElementById(nodeId);
+                if (nodeEl) {
+                    nodeEl.classList.add('selected');
+                }
+
+                this.selectedNode = nodeId;
+                this.showNodeDetails(nodeId);
+            },
+
+            showNodeDetails(nodeId) {
+                const node = this.nodes.get(nodeId);
+                if (!node) return;
+
+                const info = this.nodeTypes[node.type];
+                const panel = document.getElementById('details-panel');
+
+                let configHtml = '';
+                Object.entries(node.config).forEach(([key, value]) => {
+                    let valueHtml;
+                    if (typeof value === 'object' && value !== null) {
+                        valueHtml = `<div class="json-tree">${this.renderJsonTree(value)}</div>`;
+                    } else if (typeof value === 'string' && value.length > 100) {
+                        valueHtml = value.substring(0, 100) + '...';
+                    } else {
+                        valueHtml = value;
+                    }
+                    configHtml += `
+                        <div class="details-key">${key}</div>
+                        <div class="details-value">${valueHtml}</div>
+                    `;
+                });
+
+                let resultHtml = '-';
+                if (node.result !== null && node.result !== undefined) {
+                    if (typeof node.result === 'string') {
+                        resultHtml = node.result.length > 500 ? node.result.substring(0, 500) + '...' : node.result;
+                    } else if (typeof node.result === 'object') {
+                        resultHtml = `<div class="json-tree">${this.renderJsonTree(node.result)}</div>`;
+                    } else {
+                        resultHtml = String(node.result);
+                    }
+                }
+
+                let logsHtml = '';
+                if (node.logs.length > 0) {
+                    node.logs.forEach(log => {
+                        logsHtml += `<div class="log-entry ${log.type}">${log.message}</div>`;
+                    });
+                } else {
+                    logsHtml = '<div style="color: var(--text-secondary); font-size: 12px;">暂无日志</div>';
+                }
+
+                let variablesHtml = '';
+                if (node.type === 'set-variable' || node.type === 'get-variable') {
+                    const varName = node.config.variableName;
+                    const varValue = this.variables.get(varName);
+                    if (varValue !== undefined) {
+                        let preview;
+                        if (typeof varValue === 'string') {
+                            preview = varValue.length > 500 ? varValue.substring(0, 500) + '...' : varValue;
+                        } else if (typeof varValue === 'object' && varValue !== null) {
+                            preview = `<div class="json-tree">${this.renderJsonTree(varValue)}</div>`;
+                        } else {
+                            preview = String(varValue);
+                        }
+                        variablesHtml = `
+                            <div class="details-section">
+                                <div class="details-section-title">关联变量</div>
+                                <div class="details-content">
+                                    <div class="details-key">$${varName}</div>
+                                    <div class="details-value">${preview}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                panel.innerHTML = `
+                    <div class="panel-title">${info.icon} ${info.name}</div>
+
+                    <div class="details-section">
+                        <div class="details-section-title">节点配置</div>
+                        <div class="details-content">
+                            ${configHtml || '<div style="color: var(--text-secondary);">无配置</div>'}
+                        </div>
+                    </div>
+
+                    ${variablesHtml}
+
+                    <div class="details-section">
+                        <div class="details-section-title">执行结果</div>
+                        <div class="details-content">
+                            <div class="details-value">${resultHtml}</div>
+                        </div>
+                    </div>
+
+                    <div class="details-section">
+                        <div class="details-section-title">执行日志</div>
+                        <div class="details-content">
+                            ${logsHtml}
+                        </div>
+                    </div>
+                `;
+
+                // 处理JSON悬浮查看器
+                setTimeout(() => {
+                    this.wrapJsonValues(panel);
+                }, 0);
+            },
+
+            getDefaultConfig(type) {
+                const configs = {
+                    'text-input': { value: '' },
+                    'regex-replace': { pattern: '', replacement: '', flags: 'g' },
+                    'array-to-lines': { separator: '\n' },
+                    'json-to-lines': { format: 'json', separator: '\n' },
+                    'filter': { condition: 'return item !== null;' },
+                    'map': { transform: 'return item;' },
+                    'loop-start': {},
+                    'loop-end': { loopStartId: '' },
+                    'aggregate': { operation: 'collect' },
+                    'set-variable': { variableName: 'myVar' },
+                    'get-variable': { variableName: 'myVar' },
+                    'download': { filename: 'output.txt', format: 'text' },
+                    'copy-to-clipboard': { preprocessor: 'function process(input) {\n  return input;\n}' },
+                    'custom-js': { code: 'function transform(input) {\n  return input;\n}' }
+                };
+                return configs[type] || {};
+            },
+
+            openConfig(nodeId) {
+                const node = this.nodes.get(nodeId);
+                if (!node) return;
+
+                this.currentConfigNode = nodeId;
+                const info = this.nodeTypes[node.type];
+
+                document.getElementById('modal-title').textContent = `配置 - ${info.name}`;
+                document.getElementById('modal-body').innerHTML = this.getConfigForm(node.type, node.config);
+                document.getElementById('config-modal').classList.add('show');
+
+                if (['custom-js', 'filter', 'map', 'copy-to-clipboard'].includes(node.type)) {
+                    setTimeout(() => this.initMonaco(node.type, node.config), 100);
+                }
+            },
+
+            getConfigForm(type, config) {
+                switch(type) {
+                    case 'text-input':
+                        return `<div class="form-group"><label class="form-label">输入文本</label><textarea class="form-input form-textarea" id="config-value">${config.value || ''}</textarea></div>`;
+
+                    case 'regex-replace':
+                        return `
+                            <div class="form-group"><label class="form-label">正则表达式</label><input type="text" class="form-input" id="config-pattern" value="${config.pattern || ''}"></div>
+                            <div class="form-group"><label class="form-label">替换内容</label><input type="text" class="form-input" id="config-replacement" value="${config.replacement || ''}"></div>
+                            <div class="form-group"><label class="form-label">标志</label><input type="text" class="form-input" id="config-flags" value="${config.flags || 'g'}"></div>
+                        `;
+
+                    case 'array-to-lines':
+                        return `<div class="form-group"><label class="form-label">分隔符</label><input type="text" class="form-input" id="config-separator" value="${config.separator || '\\n'}"></div>`;
+
+                    case 'json-to-lines':
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">输出格式</label>
+                                <select class="form-input" id="config-format">
+                                    <option value="json" ${config.format === 'json' ? 'selected' : ''}>JSON格式 (每行一个JSON对象)</option>
+                                    <option value="text" ${config.format === 'text' ? 'selected' : ''}>纯文本 (每行记录的文本表示)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">分隔符</label>
+                                <input type="text" class="form-input" id="config-separator" value="${config.separator || '\\n'}">
+                            </div>
+                        `;
+
+                    case 'copy-to-clipboard':
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">数据预处理函数 (可选)</label>
+                                <div class="code-editor-container" id="code-editor"></div>
+                                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                                    在复制前对数据进行处理,函数接收input参数并返回处理后的结果
+                                </div>
+                            </div>
+                        `;
+
+                    case 'set-variable':
+                    case 'get-variable':
+                        return `<div class="form-group"><label class="form-label">变量名</label><input type="text" class="form-input" id="config-variableName" value="${config.variableName || ''}"></div>`;
+
+                    case 'download':
+                        return `
+                            <div class="form-group"><label class="form-label">文件名</label><input type="text" class="form-input" id="config-filename" value="${config.filename || 'output.txt'}"></div>
+                            <div class="form-group"><label class="form-label">格式</label><select class="form-input" id="config-format"><option value="text" ${config.format === 'text' ? 'selected' : ''}>纯文本</option><option value="json" ${config.format === 'json' ? 'selected' : ''}>JSON</option></select></div>
+                        `;
+
+                    case 'loop-end':
+                        let loopStartOptions = '<option value="">选择Loop Start节点</option>';
+                        this.nodes.forEach((node, id) => {
+                            if (node.type === 'loop-start') {
+                                loopStartOptions += `<option value="${id}" ${config.loopStartId === id ? 'selected' : ''}>${this.nodeTypes[node.type].icon} ${id}</option>`;
+                            }
+                        });
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">关联的Loop Start节点</label>
+                                <select class="form-input" id="config-loopStartId">${loopStartOptions}</select>
+                                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                                    Loop End会收集循环体每次迭代的结果
+                                </div>
+                            </div>
+                        `;
+
+                    case 'aggregate':
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">聚合操作</label>
+                                <select class="form-input" id="config-operation">
+                                    <option value="collect" ${config.operation === 'collect' ? 'selected' : ''}>收集（返回数组）</option>
+                                    <option value="join" ${config.operation === 'join' ? 'selected' : ''}>拼接（逗号分隔）</option>
+                                    <option value="count" ${config.operation === 'count' ? 'selected' : ''}>计数</option>
+                                    <option value="sum" ${config.operation === 'sum' ? 'selected' : ''}>求和</option>
+                                    <option value="first" ${config.operation === 'first' ? 'selected' : ''}>第一个</option>
+                                    <option value="last" ${config.operation === 'last' ? 'selected' : ''}>最后一个</option>
+                                </select>
+                            </div>
+                        `;
+
+                    case 'custom-js':
+                    case 'filter':
+                    case 'map':
+                        return `<div class="form-group"><label class="form-label">代码</label><div class="code-editor-container" id="code-editor"></div></div>`;
+
+                    default:
+                        return '<p>此节点无需配置</p>';
+                }
+            },
+
+            initMonaco(type, config) {
+                require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+                require(['vs/editor/editor.main'], () => {
+                    let code = '';
+                    if (type === 'custom-js') code = config.code || 'function transform(input) {\n  return input;\n}';
+                    else if (type === 'filter') code = config.condition || 'return item !== null;';
+                    else if (type === 'map') code = config.transform || 'return item;';
+                    else if (type === 'copy-to-clipboard') code = config.preprocessor || 'function process(input) {\n  return input;\n}';
+
+                    this.monacoEditor = monaco.editor.create(document.getElementById('code-editor'), {
+                        value: code,
+                        language: 'javascript',
+                        theme: 'vs',
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        automaticLayout: true
+                    });
+                });
+            },
+
+            saveConfig() {
+                if (!this.currentConfigNode) return;
+
+                const node = this.nodes.get(this.currentConfigNode);
+                const type = node.type;
+                const config = node.config;
+
+                switch(type) {
+                    case 'text-input':
+                        config.value = document.getElementById('config-value').value;
+                        break;
+                    case 'regex-replace':
+                        config.pattern = document.getElementById('config-pattern').value;
+                        config.replacement = document.getElementById('config-replacement').value;
+                        config.flags = document.getElementById('config-flags').value;
+                        break;
+                    case 'array-to-lines':
+                        config.separator = document.getElementById('config-separator').value.replace(/\\n/g, '\n');
+                        break;
+                    case 'json-to-lines':
+                        config.format = document.getElementById('config-format').value;
+                        config.separator = document.getElementById('config-separator').value.replace(/\\n/g, '\n');
+                        break;
+                    case 'copy-to-clipboard':
+                        if (this.monacoEditor) config.preprocessor = this.monacoEditor.getValue();
+                        break;
+                    case 'set-variable':
+                    case 'get-variable':
+                        config.variableName = document.getElementById('config-variableName').value;
+                        break;
+                    case 'download':
+                        config.filename = document.getElementById('config-filename').value;
+                        config.format = document.getElementById('config-format').value;
+                        break;
+                    case 'custom-js':
+                        if (this.monacoEditor) config.code = this.monacoEditor.getValue();
+                        break;
+                    case 'filter':
+                        if (this.monacoEditor) config.condition = this.monacoEditor.getValue();
+                        break;
+                    case 'map':
+                        if (this.monacoEditor) config.transform = this.monacoEditor.getValue();
+                        break;
+                    case 'loop-end':
+                        config.loopStartId = document.getElementById('config-loopStartId').value;
+                        break;
+                    case 'aggregate':
+                        config.operation = document.getElementById('config-operation').value;
+                        break;
+                }
+
+                this.closeModal();
+                this.showToast('配置已保存', 'success');
+
+                // 刷新详情面板
+                if (this.selectedNode === this.currentConfigNode) {
+                    this.showNodeDetails(this.currentConfigNode);
+                }
+            },
+
+            closeModal() {
+                document.getElementById('config-modal').classList.remove('show');
+                if (this.monacoEditor) {
+                    this.monacoEditor.dispose();
+                    this.monacoEditor = null;
+                }
+                this.currentConfigNode = null;
+            },
+
+            deleteNode(nodeId) {
+                if (!confirm('确定删除此节点?')) return;
+
+                this.nodes.delete(nodeId);
+                this.connections = this.connections.filter(c => c.from !== nodeId && c.to !== nodeId);
+                document.getElementById(nodeId).remove();
+                this.renderConnections();
+                this.showToast('节点已删除', 'info');
+
+                // 如果删除的是当前选中节点，清空详情面板
+                if (this.selectedNode === nodeId) {
+                    this.selectedNode = null;
+                    document.getElementById('details-panel').innerHTML = `
+                        <div class="panel-title">📊 节点详情</div>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👈</div>
+                            <div>点击节点查看详情</div>
+                        </div>
+                    `;
+                }
+            },
+
+            async runWorkflow() {
+                try {
+                    this.showToast('开始执行...', 'info');
+
+                    // 清空所有节点的日志
+                    this.nodes.forEach(node => {
+                        node.logs = [];
+                    });
+
+                    const sorted = this.topologicalSort();
+                    if (!sorted) {
+                        this.showToast('存在循环依赖!', 'error');
+                        return;
+                    }
+
+                    for (const nodeId of sorted) {
+                        await this.executeNode(nodeId);
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+
+                    this.showToast('执行完成!', 'success');
+
+                    // 如果有选中的节点，刷新详情
+                    if (this.selectedNode) {
+                        this.showNodeDetails(this.selectedNode);
+                    }
+                } catch (error) {
+                    this.showToast('执行出错: ' + error.message, 'error');
+                }
+            },
+
+            topologicalSort() {
+                const inDegree = new Map();
+                const queue = [];
+                const result = [];
+
+                this.nodes.forEach((node, id) => {
+                    inDegree.set(id, node.inputs.length);
+                    if (node.inputs.length === 0) queue.push(id);
+                });
+
+                while (queue.length > 0) {
+                    const nodeId = queue.shift();
+                    result.push(nodeId);
+
+                    const node = this.nodes.get(nodeId);
+                    node.outputs.forEach(outputId => {
+                        const degree = inDegree.get(outputId) - 1;
+                        inDegree.set(outputId, degree);
+                        if (degree === 0) queue.push(outputId);
+                    });
+                }
+
+                return result.length === this.nodes.size ? result : null;
+            },
+
+            getNodesBetween(startNodeId, endNodeId) {
+                // 获取从 startNode 到 endNode 之间的所有节点(不包括起止节点本身)
+                const result = [];
+                const visited = new Set();
+                const queue = [];
+
+                // 从 startNode 的输出开始
+                const startNode = this.nodes.get(startNodeId);
+                if (!startNode) return result;
+
+                startNode.outputs.forEach(outputId => {
+                    if (outputId !== endNodeId) {
+                        queue.push(outputId);
+                    }
+                });
+
+                // BFS 遍历到 endNode 为止
+                while (queue.length > 0) {
+                    const nodeId = queue.shift();
+
+                    if (visited.has(nodeId) || nodeId === endNodeId) continue;
+                    visited.add(nodeId);
+                    result.push(nodeId);
+
+                    const node = this.nodes.get(nodeId);
+                    if (node) {
+                        node.outputs.forEach(outputId => {
+                            if (!visited.has(outputId) && outputId !== endNodeId) {
+                                queue.push(outputId);
+                            }
+                        });
+                    }
+                }
+
+                return result;
+            },
+
+            async executeNode(nodeId) {
+                const node = this.nodes.get(nodeId);
+                const config = node.config;
+                const info = this.nodeTypes[node.type];
+
+                // 更新状态
+                const statusEl = document.getElementById(`status-${nodeId}`);
+                if (statusEl) statusEl.textContent = '执行中...';
+
+                node.logs.push({ type: 'info', message: `开始执行 ${info.name}` });
+
+                let input = null;
+                if (node.inputs.length > 0) {
+                    const inputNode = this.nodes.get(node.inputs[0]);
+                    input = inputNode ? inputNode.result : null;
+                    node.logs.push({ type: 'info', message: `接收到输入: ${typeof input}` });
+                }
+
+                try {
+                    switch(node.type) {
+                        case 'text-input':
+                            node.result = config.value;
+                            break;
+                        case 'lines-to-array':
+                            node.result = typeof input === 'string' ? input.split('\n') : [];
+                            node.logs.push({ type: 'success', message: `拆分为 ${node.result.length} 行` });
+                            break;
+                        case 'array-to-lines':
+                            node.result = Array.isArray(input) ? input.join(config.separator) : '';
+                            break;
+                        case 'json-to-lines':
+                            if (Array.isArray(input)) {
+                                const format = config.format || 'json';
+                                const separator = config.separator || '\n';
+                                if (format === 'json') {
+                                    node.result = input.map(item => JSON.stringify(item)).join(separator);
+                                } else {
+                                    node.result = input.map(item =>
+                                        typeof item === 'object' ? JSON.stringify(item) : String(item)
+                                    ).join(separator);
+                                }
+                                node.logs.push({ type: 'success', message: `转换 ${input.length} 行` });
+                            } else {
+                                node.result = '';
+                                node.logs.push({ type: 'error', message: '输入不是数组' });
+                            }
+                            break;
+                        case 'regex-replace':
+                            const regex = new RegExp(config.pattern, config.flags);
+                            if (typeof input === 'string') {
+                                node.result = input.replace(regex, config.replacement);
+                            } else if (Array.isArray(input)) {
+                                node.result = input.map(item => typeof item === 'string' ? item.replace(regex, config.replacement) : item);
+                            } else {
+                                node.result = input;
+                            }
+                            node.logs.push({ type: 'success', message: `正则替换完成` });
+                            break;
+                        case 'filter':
+                            if (Array.isArray(input)) {
+                                const fn = new Function('item', 'index', 'array', config.condition);
+                                const before = input.length;
+                                node.result = input.filter(fn);
+                                node.logs.push({ type: 'success', message: `过滤: ${before} → ${node.result.length}` });
+                            } else {
+                                node.result = input;
+                            }
+                            break;
+                        case 'map':
+                            if (Array.isArray(input)) {
+                                const fn = new Function('item', 'index', 'array', config.transform);
+                                node.result = input.map(fn);
+                                node.logs.push({ type: 'success', message: `映射 ${node.result.length} 项` });
+                            } else {
+                                node.result = input;
+                            }
+                            break;
+                        case 'loop-start':
+                            // Loop Start 接收数组,传递数组供后续节点使用
+                            if (Array.isArray(input)) {
+                                node.result = input;
+                                node.logs.push({ type: 'success', message: `循环开始: ${input.length} 项` });
+                            } else {
+                                node.result = [];
+                                node.logs.push({ type: 'error', message: '输入不是数组' });
+                            }
+                            break;
+                        case 'loop-end':
+                            // Loop End 收集循环体内的结果
+                            const loopStartId = config.loopStartId;
+                            if (!loopStartId) {
+                                node.result = null;
+                                node.logs.push({ type: 'error', message: '未关联 Loop Start 节点' });
+                                break;
+                            }
+
+                            const loopStartNode = this.nodes.get(loopStartId);
+                            if (!loopStartNode || !Array.isArray(loopStartNode.result)) {
+                                node.result = null;
+                                node.logs.push({ type: 'error', message: 'Loop Start 未执行或无有效数组' });
+                                break;
+                            }
+
+                            // 获取循环体节点 (Loop Start 和 Loop End 之间的节点)
+                            const loopBodyNodes = this.getNodesBetween(loopStartId, nodeId);
+                            const loopArray = loopStartNode.result;
+                            const results = [];
+
+                            node.logs.push({ type: 'info', message: `开始循环: ${loopArray.length} 次迭代` });
+
+                            // 为每个数组项执行循环体
+                            for (let i = 0; i < loopArray.length; i++) {
+                                const item = loopArray[i];
+
+                                // 设置循环起点的输出为当前项
+                                const tempStartResult = loopStartNode.result;
+                                loopStartNode.result = item;
+
+                                // 执行循环体内的所有节点
+                                for (const bodyNodeId of loopBodyNodes) {
+                                    await this.executeNode(bodyNodeId);
+                                }
+
+                                // 收集循环体最后一个节点的结果
+                                if (loopBodyNodes.length > 0) {
+                                    const lastBodyNode = this.nodes.get(loopBodyNodes[loopBodyNodes.length - 1]);
+                                    results.push(lastBodyNode.result);
+                                }
+
+                                // 恢复 Loop Start 的原始结果
+                                loopStartNode.result = tempStartResult;
+                            }
+
+                            node.result = results;
+                            node.logs.push({ type: 'success', message: `循环结束: 收集 ${results.length} 个结果` });
+                            break;
+                        case 'aggregate':
+                            // 聚合操作
+                            if (!Array.isArray(input)) {
+                                node.result = input;
+                                node.logs.push({ type: 'error', message: '输入不是数组,无法聚合' });
+                                break;
+                            }
+
+                            const operation = config.operation || 'collect';
+                            switch(operation) {
+                                case 'collect':
+                                    node.result = input;
+                                    node.logs.push({ type: 'success', message: `收集 ${input.length} 项` });
+                                    break;
+                                case 'join':
+                                    node.result = input.join(', ');
+                                    node.logs.push({ type: 'success', message: `拼接为字符串` });
+                                    break;
+                                case 'count':
+                                    node.result = input.length;
+                                    node.logs.push({ type: 'success', message: `计数: ${input.length}` });
+                                    break;
+                                case 'sum':
+                                    node.result = input.reduce((sum, val) => sum + (Number(val) || 0), 0);
+                                    node.logs.push({ type: 'success', message: `求和: ${node.result}` });
+                                    break;
+                                case 'first':
+                                    node.result = input.length > 0 ? input[0] : null;
+                                    node.logs.push({ type: 'success', message: `获取第一个` });
+                                    break;
+                                case 'last':
+                                    node.result = input.length > 0 ? input[input.length - 1] : null;
+                                    node.logs.push({ type: 'success', message: `获取最后一个` });
+                                    break;
+                                default:
+                                    node.result = input;
+                            }
+                            break;
+                        case 'set-variable':
+                            this.variables.set(config.variableName, input);
+                            node.result = input;
+                            node.logs.push({ type: 'success', message: `变量 $${config.variableName} 已设置` });
+                            break;
+                        case 'get-variable':
+                            node.result = this.variables.get(config.variableName) || null;
+                            node.logs.push({ type: 'success', message: `获取变量 $${config.variableName}` });
+                            break;
+                        case 'output':
+                            node.result = input;
+                            console.log('Output:', input);
+                            node.logs.push({ type: 'success', message: '结果已输出到控制台' });
+                            break;
+                        case 'download':
+                            node.result = input;
+                            this.downloadFile(input, config.filename, config.format);
+                            node.logs.push({ type: 'success', message: `文件 ${config.filename} 已下载` });
+                            break;
+                        case 'copy-to-clipboard':
+                            try {
+                                let data = input;
+                                // 如果有预处理函数,先处理数据
+                                if (config.preprocessor && config.preprocessor.trim()) {
+                                    const processFn = eval(`(${config.preprocessor})`);
+                                    data = processFn(input);
+                                }
+                                // 转换为字符串
+                                const textToCopy = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                                // 复制到剪切板
+                                navigator.clipboard.writeText(textToCopy).then(() => {
+                                    node.logs.push({ type: 'success', message: `已复制 ${textToCopy.length} 字符到剪切板` });
+                                    this.showToast('已复制到剪切板', 'success');
+                                }).catch(err => {
+                                    node.logs.push({ type: 'error', message: `复制失败: ${err.message}` });
+                                });
+                                node.result = data;
+                            } catch (error) {
+                                node.logs.push({ type: 'error', message: `预处理失败: ${error.message}` });
+                                throw error;
+                            }
+                            break;
+                        case 'custom-js':
+                            const fn = eval(`(${config.code})`);
+                            node.result = fn(input);
+                            node.logs.push({ type: 'success', message: '自定义代码执行完成' });
+                            break;
+                        default:
+                            node.result = input;
+                    }
+
+                    if (statusEl) statusEl.textContent = '✓ 已完成';
+                    this.updateNodePreview(nodeId);
+                    node.logs.push({ type: 'success', message: '执行成功' });
+
+                } catch (error) {
+                    node.logs.push({ type: 'error', message: `错误: ${error.message}` });
+                    if (statusEl) statusEl.textContent = '✗ 错误';
+                    throw error;
+                }
+            },
+
+            updateNodePreview(nodeId) {
+                const node = this.nodes.get(nodeId);
+                const el = document.getElementById(`preview-${nodeId}`);
+                if (!el) return;
+
+                const result = node.result;
+                if (result === null || result === undefined) {
+                    el.textContent = '-';
+                } else if (typeof result === 'string') {
+                    el.textContent = result.substring(0, 30) + (result.length > 30 ? '...' : '');
+                } else if (Array.isArray(result)) {
+                    el.textContent = `Array(${result.length})`;
+                } else if (typeof result === 'object') {
+                    el.textContent = 'Object{...}';
+                } else {
+                    el.textContent = String(result);
+                }
+            },
+
+            downloadFile(data, filename, format) {
+                const content = format === 'json' ? JSON.stringify(data, null, 2) :
+                               typeof data === 'string' ? data : JSON.stringify(data);
+                const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            },
+
+            exportWorkflow() {
+                const workflowName = document.getElementById('workflow-name').value || '未命名工作流';
+                const data = {
+                    name: workflowName,
+                    nodes: Array.from(this.nodes.values()).map(node => ({
+                        ...node,
+                        logs: [], // 不导出日志
+                        result: null // 不导出结果
+                    })),
+                    connections: this.connections
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                // 使用工作流名称作为文件名
+                const filename = `${workflowName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast(`已导出: ${filename}`, 'success');
+            },
+
+            importWorkflow() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const data = JSON.parse(e.target.result);
+                                this.loadWorkflowData(data);
+                            } catch (error) {
+                                this.showToast('导入失败: ' + error.message, 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+            },
+
+            loadWorkflowData(data) {
+                this.clearAll(false);
+
+                // 设置工作流名称
+                if (data.name) {
+                    document.getElementById('workflow-name').value = data.name;
+                }
+
+                // 加载节点
+                data.nodes.forEach(node => {
+                    node.logs = node.logs || [];
+                    this.nodes.set(node.id, node);
+                    this.renderNode(node);
+                });
+
+                // 加载连接
+                this.connections = data.connections || [];
+                this.renderConnections();
+
+                // 更新节点计数器
+                if (data.nodes.length > 0) {
+                    this.nodeCounter = Math.max(...data.nodes.map(n => parseInt(n.id.split('-')[1])));
+                }
+
+                this.showToast(`已导入工作流: ${data.name || '未命名'}`, 'success');
+            },
+
+            async loadWorkflowFromURL(url) {
+                try {
+                    this.showToast('正在从URL加载工作流...', 'info');
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    this.loadWorkflowData(data);
+                } catch (error) {
+                    this.showToast('从URL导入失败: ' + error.message, 'error');
+                    console.error('Failed to load workflow from URL:', error);
+                }
+            },
+
+            clearAll(confirm = true) {
+                if (confirm && !window.confirm('确定清空?')) return;
+
+                this.nodes.clear();
+                this.connections = [];
+                this.variables.clear();
+                this.nodeCounter = 0;
+                this.selectedNode = null;
+                document.getElementById('canvas').innerHTML = '<svg id="svg-layer"></svg>';
+                document.getElementById('details-panel').innerHTML = `
+                    <div class="panel-title">📊 节点详情</div>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👈</div>
+                        <div>点击节点查看详情</div>
+                    </div>
+                `;
+                // 清空工作流名称
+                document.getElementById('workflow-name').value = '';
+                if (confirm) this.showToast('已清空', 'info');
+            },
+
+            showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                toastMessage.textContent = message;
+                toast.className = `toast ${type} show`;
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            },
+
+            highlightJson(jsonStr) {
+                // 简单的JSON语法高亮
+                return jsonStr
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, (match) => {
+                        let cls = 'json-string';
+                        if (/:$/.test(match)) {
+                            cls = 'json-key';
+                        }
+                        return `<span class="${cls}">${match}</span>`;
+                    })
+                    .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+                    .replace(/\b(null)\b/g, '<span class="json-null">$1</span>')
+                    .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
+            },
+
+            renderJsonTree(data, key = null, isExpanded = true) {
+                const type = Array.isArray(data) ? 'array' : typeof data;
+
+                if (data === null) {
+                    return `<span class="json-tree-null">null</span>`;
+                }
+
+                if (type === 'string') {
+                    return `<span class="json-tree-string">"${data}"</span>`;
+                }
+
+                if (type === 'number') {
+                    return `<span class="json-tree-number">${data}</span>`;
+                }
+
+                if (type === 'boolean') {
+                    return `<span class="json-tree-boolean">${data}</span>`;
+                }
+
+                if (type === 'array') {
+                    const toggleId = 'toggle-' + Math.random().toString(36).substr(2, 9);
+                    const contentId = 'content-' + Math.random().toString(36).substr(2, 9);
+
+                    let html = `<span class="json-tree-toggle" onclick="document.getElementById('${contentId}').classList.toggle('json-tree-collapsed'); this.textContent = this.textContent === '▼' ? '▶' : '▼';">${isExpanded ? '▼' : '▶'}</span>`;
+                    html += `<span class="json-tree-type">[${data.length}]</span>`;
+                    html += `<div id="${contentId}" class="json-tree-node ${isExpanded ? '' : 'json-tree-collapsed'}">`;
+
+                    data.forEach((item, index) => {
+                        html += `<div><span class="json-tree-key">[${index}]</span>: ${this.renderJsonTree(item, null, false)}</div>`;
+                    });
+
+                    html += `</div>`;
+                    return html;
+                }
+
+                if (type === 'object') {
+                    const toggleId = 'toggle-' + Math.random().toString(36).substr(2, 9);
+                    const contentId = 'content-' + Math.random().toString(36).substr(2, 9);
+                    const keys = Object.keys(data);
+
+                    let html = `<span class="json-tree-toggle" onclick="document.getElementById('${contentId}').classList.toggle('json-tree-collapsed'); this.textContent = this.textContent === '▼' ? '▶' : '▼';">${isExpanded ? '▼' : '▶'}</span>`;
+                    html += `<span class="json-tree-type">{${keys.length}}</span>`;
+                    html += `<div id="${contentId}" class="json-tree-node ${isExpanded ? '' : 'json-tree-collapsed'}">`;
+
+                    keys.forEach(k => {
+                        html += `<div><span class="json-tree-key">${k}</span>: ${this.renderJsonTree(data[k], k, false)}</div>`;
+                    });
+
+                    html += `</div>`;
+                    return html;
+                }
+
+                return `<span>${String(data)}</span>`;
+            }
+        };
+
+        window.addEventListener('load', () => app.init());
+    </script>
+</body>
+</html>
